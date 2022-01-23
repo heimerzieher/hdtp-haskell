@@ -7,40 +7,68 @@ a set of function symbols (with an associated arity function), and a set
 of predicate symbols (with an associated arity function). We consider constants
 to be nullary functions (arFun c :: [] -> Sort)
 
-> type Sort = Int
-> type FunSymb = String 
+> newtype Sort = S String
+> newtype FunSymb = FS String deriving Show
 > type FunSg = ([Sort], Sort)
 > type ArFun = FunSymb -> FunSg
-> type PredSymb  = String
+> newtype PredSymb = PS String deriving Show
 > type PredSg = [Sort]
-> type ArPred = PredSymb -> PredSg 
+> type ArPred = PredSymb -> PredSg
 >
 > type Signature = ([Sort], [FunSymb], [PredSymb], ArFun, ArPred)
 
 Next, we define our set of variables as a set of functions, where a standard first-order variable is just a nullary function
 
-> type Var = ([Sort], Sort)
+> newtype VarSymb = VS String deriving (Show, Eq)
+> type VarSg = ([Sort], Sort)
 
 Then, we define our terms, both first- and second-order
 
 
 > -- newtype Term Sg [[s], [f], [p], af, ap] [v] = v | f [Term] deriving (Eq,Ord,Show)
-> data Term = Var | FunSymb [Term] -- Find a way to restrict this to respect sorts
-> data Form = PredSymb [Term] | Not Form | Disj Form Form | Exists x Form | Forall x Form deriving (Eq,Ord,Show)
-> 
-> 
->
+> data Term = TV VarSymb | TF FunSymb [Term] deriving (Show) -- Find a way to restrict this to respect sorts
+> data Form = FT PredSymb [Term] | Not Form | Disj Form Form | Forall VarSymb Form deriving Show
+
 
 --------------------
 3. Anti-Unification
 
 Now we define subsitution as they did
 
-> type Sub = [Var] -> Term
-> sub xs 
-> apply = map
+> class Sub a where
+>   apply :: a -> Form -> Form
+
+A general substitution, usually not allowed:
+
+> type GenSub = [(VarSymb, Term)]
 
 And then we define the so-called ``basic substitutions''
+
+> newtype Renaming = R (VarSymb, VarSymb)
+
+> renameInVar :: Renaming -> VarSymb -> VarSymb
+> renameInVar (R (v, v')) w | w == v    = v'
+>                           | otherwise = w
+
+> instance Sub Renaming where
+>   apply r (FT p []) = FT p []
+>   apply r (FT p (t:ts)) = FT p ((renameInTerm r t):(map (renameInTerm r) ts)) where
+>     renameInTerm :: Renaming -> Term -> Term
+>     renameInTerm r (TV w) = TV (renameInVar r w)
+>     renameInTerm r (TF f []) = TF f []
+>     renameInTerm r (TF f (t:ts)) = TF f ((renameInTerm r t):(map (renameInTerm r) ts))
+> -- Purely recursive cases
+>   apply r (Not f) = Not (apply r f)
+>   apply r (Disj f f') = Disj (apply r f) (apply r f')
+>   apply r (Forall w f) = Forall (renameInVar r w) (apply r f) -- TODO should a renaming rename bound variables?
+
+Quick test:
+
+> f = Disj (Not (FT (PS "idk") $ [TV $ VS "X"])) (FT (PS "idk") $ [TV $ VS "Y"])
+> s = R (VS "X", VS "Y")
+> s `apply` f
+
+Disj (Not (FT (PS "idk") [TV (VS "Y")])) (FT (PS "idk") [TV (VS "Y")])
 
 
 > -- A renaming
