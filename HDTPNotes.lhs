@@ -208,6 +208,8 @@ X(Y)
 > someForm :: Form
 > someForm = FT (PS "P") [T (VS "X") [ T (FS "a") [], T (FS "b") [], T (FS "c") []]]
 
+> -- Output: FT (PS "P") [T (VS "X") [T (FS "b") [],T (FS "c") [],T (FS "a") []]]
+
 
 > ppp :: Form
 > ppp = apply perm someForm
