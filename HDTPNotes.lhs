@@ -135,3 +135,32 @@ Then, mappings are lists of the substitutions from each generalization
 > type Mapping = ([Sub], [Sub])
 > mapping :: DomGen -> Mapping
 > mapping (t, s, s') : gens = (s,s') : mapping gens
+
+
+
+> newtype Fixation = F (VarSymb, FunSymb)
+
+> fixInFun :: Fixation -> Term -> Term
+> fixInFun (F (v, f)) (TV w) | w == v = TF f [] 
+                             | otherwise = TV w
+> fixInFun (F (v, v')) (TF f x) = TF f x
+
+
+ --data Term = TV VarSymb | TF FunSymb [Term] deriving (Show) -- Find a way to restrict this to respect sorts
+ --data Form = FT PredSymb [Term] | Not Form | Disj Form Form | Forall VarSymb Form deriving Show
+
+> instance Sub Fixation where
+>  apply r (FT p []) = FT p []
+> apply r (FT p (t:ts)) = FT p (fixInTerm r t:map (fixInTerm r) ts) where
+>    fixInTerm :: Fixation -> Term -> Term
+>    fixInTerm r (TV w) = fixInFun r (TV w)
+>    fixInTerm r (TF f []) = TF f []
+>    fixInTerm r (TF f (t:ts)) = TF f (fixInTerm r t:map (fixInTerm r) ts)
+> -- Purely recursive cases
+>  apply r (Not f) = Not (apply r f)
+>  apply r (Disj f f') = Disj (apply r f) (apply r f')
+>  apply r (Forall w f) = Forall w (apply r f) -- TODO should a renaming rename bound variables?
+
+
+> fix :: Fixation
+> fix = F (VS "X", FS "FFF")
