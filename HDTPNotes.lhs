@@ -170,6 +170,48 @@ X(Y)
 % > fix = F (VS "X", FS "FFF")
 
 
+---- PERMUTATIONS ----
+
+
+
+
+> newtype Permutation = P (VarSymb, Int -> Int)
+
+> -- this function permutes a list (given twice as argument because of the recusion), given a function f from indices (Int) to indices (Int) 
+> -- Here it must hold that f assigns only indices smaller than length of the list to such indices, no checking whether f is bijective is done
+> permute :: [a] -> [a] -> (Int -> Int) -> [a]
+> permute [] l f = []
+> permute (x:xs) l f = l!!f (length l - (length xs + 1)) : permute xs l f
+
+
+> instance Sub Permutation where
+>   apply p (FT pr ts) = FT pr (map (permInTerm p) ts) where
+>     permInTerm :: Permutation -> Term -> Term
+>     permInTerm (P (v, f)) (T (VS w) ts) = T (VS w) (permute ts ts f)
+>     permInTerm r (T (FS f) ts) = T (FS f) (map (permInTerm r) ts)
+>   -- Purely recursive cases
+>   apply p (Not f) = Not (apply p f)
+>   apply p (Disj f f') = Disj (apply p f) (apply p f')
+>   apply p (Forall w f) = Forall w (apply p f) -- TODO should a renaming rename bound variables?
+
+
+> fun :: Int -> Int
+> fun 0 = 1
+> fun 1 = 2
+> fun 2 = 0
+
+> perm :: Permutation
+> perm = P ("X", fun) 
+
+
+> -- to test: this is basically a formula P(X(a,b,c)). a,b,c are constants (zero-ary functions)
+> someForm :: Form
+> someForm = FT (PS "P") [T (VS "X") [ T (FS "a") [], T (FS "b") [], T (FS "c") []]]
+
+
+> ppp :: Form
+> ppp = apply perm someForm
+
 
 ----------
 
