@@ -38,6 +38,14 @@ cases = [ Case { description = "Permutation dist(Y,X,T) > 0"
                , input       = (SF $ F ("X", "sun"), FT (PS "leq") [ T (FS "mass") [T (VS "X") [] ], T (FS "mass") [T (VS "Y") [] ]  ] )
                , expected    = FT (PS "leq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (VS "Y") [] ]  ]
                }
+        , Case { description = "Renaming X -> Y, mass(X) > mass(Z), "
+               , input       = (SR $ R ("X", "Z"), FT (PS "leq") [ T (FS "mass") [T (VS "X") [] ], T (FS "mass") [T (VS "Y") [] ]  ] )
+               , expected    = FT (PS "leq") [ T (FS "mass") [T (VS "Z") [] ], T (FS "mass") [T (VS "Y") [] ]  ]
+               }
+        , Case { description = "AI F F W 2, F(X,Y,Z)"
+               , input       = (SI $ AI ("F", "F", "W", 2), FT (PS "P") [T (VS "F") [ T (FS "X") [], T (FS "Y") [], T (FS "Z") []]])
+               , expected    = FT (PS "P") [T (VS "F") [ T (FS "X") [], T (FS "Y") [], T (FS "W") [], T (FS "Z") []]]
+               }
         ]
 
 -- a0b1123b94254a9db443a84a612b51cc3f3ed537
