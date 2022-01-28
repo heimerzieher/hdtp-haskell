@@ -15,20 +15,11 @@ main = hspecWith defaultConfig {configFastFail = True} specs
 specs :: Spec
 specs = describe "apply" $ for_ cases test
   where
-    test Case{..} = it description $ (apply (subsToSub $ fst input) (snd input)) `shouldBe` expected
+    test Case{..} = it description $ (apply (fst input) (snd input)) `shouldBe` expected
 
---data Subs = R (VarSymb, VarSymb) | AI (VarSymb, VarSymb, VarSymb, Int) | F (VarSymb, FunSymb) | P (VarSymb, Int -> Int) 
-
-data Subs = SR Renaming | SAI ArgumentInsertion | SF Fixation | SP Permutation
-
-subsToSub :: Sub a => Subs -> a
-subsToSub (SR x) = x
-subsToSub (SAI x) = x
-subsToSub (SF x) = x
-subsToSub (SP x) = x
 
 data Case = Case { description :: String
-                 , input       :: (Subs, Form)
+                 , input       :: (Sub, Form)
                  , expected    :: Form
                  }
 
@@ -45,7 +36,7 @@ cases = [ Case { description = "Permutation dist(Y,X,T) > 0"
                }
         , Case { description = "Fixation fix X -> sun, mass(X) > mass(Y), "
                , input       = (SF $ F ("X", "sun"), FT (PS "leq") [ T (FS "mass") [T (VS "X") [] ], T (FS "mass") [T (VS "Y") [] ]  ] )
-               , expected    = FT (PS "leq") [ T (FS "mass") [T (VS "sun") [] ], T (FS "mass") [T (VS "Y") [] ]  ]
+               , expected    = FT (PS "leq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (VS "Y") [] ]  ]
                }
         ]
 

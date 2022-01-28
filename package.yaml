@@ -17,7 +17,7 @@ library:
 
 executables:
   myprogram:
-    main: HDTPNotes.lhs
+    main: Main.lhs
     source-dirs: exec
     dependencies:
       - report

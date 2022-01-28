@@ -27,9 +27,8 @@ library
   default-language: Haskell2010
 
 executable myprogram
-  main-is: HDTPNotes.lhs
+  main-is: Main.lhs
   other-modules:
-      Main
       Paths_report
   hs-source-dirs:
       exec
