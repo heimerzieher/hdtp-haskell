@@ -5,7 +5,6 @@
 import Data.Foldable     (for_)
 import Test.Hspec        (Spec, describe, it, shouldBe)
 import Test.Hspec.Runner (configFastFail, defaultConfig, hspecWith)
-import Data.String       (fromString)
 
 import HDTP
 
@@ -23,12 +22,6 @@ data Case = Case { description :: String
                  , expected    :: Form
                  }
 
-permFun :: Int -> Int
-permFun 0 = 1
-permFun 1 = 2
-permFun 2 = 0
-permFun x = x
-
 cases :: [Case]
 cases = [ Case { description = "Permutation dist(Y,X,T) > 0"
                , input       = (SP $ P ("Y", fun), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
@@ -44,7 +37,7 @@ cases = [ Case { description = "Permutation dist(Y,X,T) > 0"
                }
         , Case { description = "AI F F W 2, F(X,Y,Z)"
                , input       = (SI $ AI ("F", "F", "W", 2), FT (PS "P") [T (VS "F") [ T (FS "X") [], T (FS "Y") [], T (FS "Z") []]])
-               , expected    = FT (PS "P") [T (VS "F") [ T (FS "X") [], T (FS "Y") [], T (FS "W") [], T (FS "Z") []]]
+               , expected    = FT (PS "P") [T (VS "F") [ T (FS "X") [], T (FS "Y") [], T (VS "W") [T (FS "Z") []]]]
                }
         ]
 

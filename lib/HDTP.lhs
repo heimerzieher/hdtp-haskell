@@ -28,7 +28,9 @@ Then, we define our terms, both first- and second-order
 > symbAr (VS "F") = ([S "a"], S "b")
 > symbAr (VS "F'") = ([S "a"], S "b")
 > symbAr (VS "G") = ([S "a"], S "b")
-> predAr :: PredSymb -> ([Sort])
+> symbAr (VS "W") = ([S "a"], S "b")
+> symbAr _ = undefined
+> predAr :: PredSymb -> [Sort]
 > predAr = undefined
 
 
@@ -61,7 +63,7 @@ Renaming
 
 > -- Checks whether two variables have the same arity
 > sameArity :: VarSymb -> VarSymb -> Bool
-> sameArity v v' = (symbAr (VS v)) == (symbAr (VS v'))
+> sameArity v v' = symbAr (VS v) == symbAr (VS v')
 
 > renaming :: VarSymb -> VarSymb -> Maybe Renaming
 > renaming v v' | sameArity v v' = Just $ R (v, v')
@@ -71,10 +73,13 @@ Renaming
 > renameInVar (R (v, v')) w | w == v    = v'
 >                           | otherwise = w
 
-> applyRenaming r (FT p ts) = FT p (map (renameInTerm r) ts) where
->   renameInTerm :: Renaming -> Term -> Term
->   renameInTerm r (T (VS w) ts) = T (VS (renameInVar r w)) ts
->   renameInTerm r (T (FS f) ts) = T (FS f) (map (renameInTerm r) ts)
+> applyRenaming :: Renaming -> Form -> Form
+> applyRenaming r (FT p ts) = FT p (map renameInTerm ts) where
+>   renameInTerm :: Term -> Term
+>   renameInTerm (T (VS w) ts') = T (VS (renameInVar r w)) ts'
+>   renameInTerm (T (FS f) ts') = T (FS f) (map renameInTerm ts')
+> applyRenaming _ _ = undefined -- Recursive cases handled by apply
+
 
 
 Fixation
@@ -82,11 +87,13 @@ Fixation
 
 > newtype Fixation = F (VarSymb, FunSymb)
 
-> applyFixation r (FT p ts) = FT p (map (fixInTerm r) ts) where
->   fixInTerm :: Fixation -> Term -> Term
->   fixInTerm (F (v, f)) (T (VS w) ts) | w == v = T (FS f) ts
->                                      | otherwise = T (VS w) ts
->   fixInTerm r (T (FS f) ts) = T (FS f) (map (fixInTerm r) ts)
+> applyFixation :: Fixation -> Form -> Form
+> applyFixation (F (v, f)) (FT p ts) = FT p (map fixInTerm ts) where
+>   fixInTerm :: Term -> Term
+>   fixInTerm (T (VS w) ts') | w == v = T (FS f) ts'
+>                            | otherwise = T (VS w) ts'
+>   fixInTerm (T (FS f') ts') = T (FS f') (map fixInTerm ts')
+> applyFixation _ _ = undefined -- Recursive cases handled by apply
 
 % > fix :: Fixation
 % > fix = F (VS "X", FS "FFF")
@@ -98,26 +105,16 @@ Argument Insertion
 >                              -- F,       F',      G,       i
 > newtype Insertion = AI (VarSymb, VarSymb, VarSymb, Int)
 
-> replace :: [Term] -> Term -> Int -> [Term]
-> replace = undefined
-
-% > replace ts t idx = Data.Foldable.foldr (:) [] $ S.update idx t $ S.fromList ts
-
-> isArgument :: Int -> Int -> Int -> Bool
-> isArgument i k idx = idx `elem` [i..i+k-1]
-
-> applyInsertion ai (FT p ts) = FT p (map (insertInTerm ai) ts) where
->   insertInTerm :: Insertion -> Term -> Term
->   insertInTerm ai@(AI (f, f', g, i)) (T (VS v) ts) | v == f = let
->     k = length $ fst $ symbAr $ VS g
->     arguments = [ t | (idx, t) <- zip [0..] ts, isArgument i k idx ]
->     nonArguments = ts \\ arguments
->     in head ts
-
-% >     insertInTerm ai@(AI (f, f', g, i)) (T (VS v) ts) | v == f = T (VS f') [ t | (idx, t) <- zip [0..] (replace ts (T (VS g) [ t | (idx, t) <- zip [0..] ts, isArgument i (length $ fst $ symbAr $ VS g) idx ]) i), not (isArgument i (length $ fst $ symbAr $ VS g) idx)]
-% >                                                      | otherwise = T (VS v) (map (insertInTerm ai) ts)
-
->   insertInTerm ai (T (FS f) ts) = T (FS f) (map (insertInTerm ai) ts)
+> applyInsertion :: Insertion -> Form -> Form
+> applyInsertion (AI (f, f', g, i)) (FT p ts) = FT p (map insertInTerm ts) where
+>   insertInTerm :: Term -> Term
+>   insertInTerm (T (VS v) ts') | v /= f = T (VS v) (map insertInTerm ts)
+>                               | otherwise = let
+>     k = length $ fst $ symbAr $ VS g -- Amount of arguments that g takes
+>     arguments = [ t | (j, t) <- zip [0..] ts', i <= j, j <= i+k-1 ] -- Arguments of f that will become arguments of g
+>     in T (VS f') [ if j == i then T (VS g) (map insertInTerm arguments) else insertInTerm t | (j, t) <- zip [0..] ts', j `notElem` [i+1..i+k-1] ]
+>   insertInTerm (T (FS f') ts') = T (FS f') (map insertInTerm ts')
+> applyInsertion _ _ = undefined -- Recursive cases handled by apply
 
 > ins :: Insertion
 > ins = AI ("F", "F'", "G", 1)
@@ -140,10 +137,12 @@ Permutation
 > permute [] l f = []
 > permute (x:xs) l f = l!!f (length l - (length xs + 1)) : permute xs l f
 
+> applyPermutation :: Permutation -> Form -> Form
 > applyPermutation p (FT pr ts) = FT pr (map (permInTerm p) ts) where
 >   permInTerm :: Permutation -> Term -> Term
 >   permInTerm (P (v, f)) (T (VS w) ts) = T (VS w) (permute ts ts f)
 >   permInTerm r (T (FS f) ts) = T (FS f) (map (permInTerm r) ts)
+> applyPermutation _ _ = undefined -- Recursive cases handled by apply
 
 > fun :: Int -> Int
 > fun 0 = 1
@@ -224,47 +223,3 @@ Then, mappings are lists of the substitutions from each generalization
 % > mapping (t, s, s') : gens = (s,s') : mapping gens
 
 
-Examples
---------
-
-Sorts
------
-
-> r = S "real"
-> o = S "object"
-> t = S "time"
-
-
-Constants
----------
-
-> sun = T (FS "s") []
-> planet = T (FS "p") []
-
-
-Functions
----------
-
-> mass = FS "m"
-> force = FS "f"
-> distance = FS "d"
-> gravity = FS "g"
-> centrifugal = FS "c"
-
-
-Predicates
-----------
-
-> revolvesAround = PS "ra"
-
-% > predAr (PS "ra") = ([])
-
-> form = FT revolvesAround [sun, planet]
-
-Note: when the user defines their signature, we will prevent them from defining a non-sensical arity function, 
-like one which allows predicates which take arguments, etc.
-
-% > lambda :: Term -> Term -> [Sub] -> (Term, [Sub])
-% > lambda t t' theta | t == t' = (t, theta)
-% > lambda (T t t:ts) (T u u:us) theta | t == u = loop 
-% >   loop 
