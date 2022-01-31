@@ -39,7 +39,8 @@ Anti-Unification
 
 Now we define subsitution as they did
 
-> data Sub = SR Renaming | SF Fixation | SI Insertion | SP Permutation
+> data Sub = SR Renaming | SF Fixation | SI Insertion | SP Permutation deriving (Eq, Show)
+
 > apply :: Sub -> Form -> Form
 > apply (SR r) (FT predSymb ts) = applyRenaming r (FT predSymb ts)
 > apply (SF f) (FT predSymb ts) = applyFixation f (FT predSymb ts)
@@ -59,7 +60,7 @@ And then we define the so-called ``basic substitutions''
 Renaming
 --------
 
-> newtype Renaming = R (VarSymb, VarSymb)
+> newtype Renaming = R (VarSymb, VarSymb) deriving (Eq, Show)
 
 > -- Checks whether two variables have the same arity
 > sameArity :: VarSymb -> VarSymb -> Bool
@@ -85,7 +86,7 @@ Renaming
 Fixation
 --------
 
-> newtype Fixation = F (VarSymb, FunSymb)
+> newtype Fixation = F (VarSymb, FunSymb) deriving (Eq, Show)
 
 > applyFixation :: Fixation -> Form -> Form
 > applyFixation (F (v, f)) (FT p ts) = FT p (map fixInTerm ts) where
@@ -103,7 +104,7 @@ Argument Insertion
 ------------------
 
 >                              -- F,       F',      G,       i
-> newtype Insertion = AI (VarSymb, VarSymb, VarSymb, Int)
+> newtype Insertion = AI (VarSymb, VarSymb, VarSymb, Int) deriving (Eq, Show)
 
 > applyInsertion :: Insertion -> Form -> Form
 > applyInsertion (AI (f, f', g, i)) (FT p ts) = FT p (map insertInTerm ts) where
@@ -129,7 +130,14 @@ Argument Insertion
 Permutation
 -----------
 
-> newtype Permutation = P (VarSymb, Int -> Int)
+> instance Show (a -> b) where
+>        show a = "function"
+
+> instance Eq (a -> b) where
+>        (==) _ _ = True
+
+
+> newtype Permutation = P (VarSymb, Int -> Int) deriving (Eq, Show)
 
 > -- this function permutes a list (given twice as argument because of the recusion), given a function f from indices (Int) to indices (Int) 
 > -- Here it must hold that f assigns only indices smaller than length of the list to such indices, no checking whether f is bijective is done
@@ -174,6 +182,36 @@ Now we define, for any set of generalizations, an algorithm for deciding which i
 
 > -- lgg :: Term -> Term -> Gen
 > -- lgg s t g:gs
+
+
+> list1 = [T (VS "X") [],T (VS "T") [],T (VS "Y") []]
+> list2 = [T (VS "A") [],T (VS "B") [],T (VS "C") []]
+> term1 = T (FS "B") list1
+> subs0 = [SR $ R ("X", "Z")]
+
+>-- lgg :: Term -> Term -> [Sub] -> (Term, [Sub])
+>-- lgg t t' [] = (t, [])
+>-- lgg t t' theta = (t, theta)
+
+> lggRec :: [Term] -> [Term] -> [Sub] -> [(Term, [Sub])]
+> lggRec [] [] theta = []
+> lggRec (u:us) (t:ts) theta = (lgg u t theta) : lggRec us ts (snd (lgg u t theta))
+
+> lgg :: Term -> Term -> [Sub] -> (Term, [Sub])
+> lgg (T s (t:ts)) (T s' (t':ts')) theta  | (T s (t:ts)) == (T s' (t':ts'))  = ((T s (t:ts)), theta) -- Boring case
+>                                     | s == s' && length (t:ts) == length (t':ts') = (T s (map fst (lggRec ts ts' theta))  , snd (last(lggRec ts ts' theta ))) -- Same top constructor case
+                                 
+
+
+First attempt, not accounting for Argument insertion or Permutations:
+
+
+
+[(x1, Theta1), (x2, theta2).... (xn, theta_n)]
+
+lst $ snd 
+
+map (\(x, y) -> x) (lggRec ts ts' theta)
 
 Now we check a list of lggs and measure their relative complexities
 
