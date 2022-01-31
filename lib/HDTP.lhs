@@ -261,3 +261,95 @@ Then, mappings are lists of the substitutions from each generalization
 % > mapping (t, s, s') : gens = (s,s') : mapping gens
 
 
+
+Generalization
+
+> --------------
+
+
+
+
+
+Next, we define, for any two terms, a generalization
+
+> type Gen = (Form, Sub, Sub)
+
+% > gnrlz :: Term -> Term -> Gen
+% > gnrlz s t = (g)
+
+Now we define, for any set of generalizations, an algorithm for deciding which is/are the least general generalization(s) (lgg)
+
+Takes two terms f(t_1 ... t_n), f(u_1...u_n), and then applies \lambda (t_1, u_1)
+
+
+f( (g_1,s,t) , (g_2,s,t) ....  )
+
+% > lggRec :: [Term] -> [Term] -> [Sub] -> [(Term, [Sub])]
+% > lggRec [] [] theta = []
+% > lggRec (u:us) (t:ts) theta = (lgg $ u t theta) : lggRec $ us ts (snd (lgg $ u t theta))
+
+
+First attempt, not accounting for Argument insertion or Permutations:
+
+> --       source formula, target formula, list of subs for Tabareau algorithm -> 
+> lgg :: Form -> Form -> [Sub] -> (Form, [Sub])
+> lgg (F s t:ts) (T s' t':ts') theta  | (T s t:ts) == (T s' t':ts')  = ((T s t:ts), theta) -- Boring case
+% >                                     | s == s' && length t:ts == length t':ts' = (map fst (lggRec ts ts' theta)  , snd.lggRec ts ts' theta ) 
+% >                                     | 
+
+
+> lambdaForTerms :: Term -> Term -> [Sub] -> (Term, [Sub])
+> lambdaForTerms = undefined
+
+> lambda :: Form -> Form -> [Sub] -> (Form, [Sub])
+> lambda phi psi theta | form == form' = (form, theta)
+> lambda (FT ps ts) (FT ps' us) theta | ps == ps' = case (ts, us) of
+> -- A given predicate symbol has a specific arity, so if ps == ps', then length ts == length us
+>   ([], [])     -> ((FT ps []), theta)
+>   (t:ts, u:us) -> (lambdaForTerms t u)
+> lambda (Not phi) (Not psi) theta = (Not outForm, subs) where (outForm, subs) = lambda phi psi theta
+> lambda (Disj phi phi') (Disj psi psi') theta = (Disj outForm outForm', subs ++ subs') where
+>   (outForm, subs) = lambda phi psi theta
+>   (outForm', subs') = lambda phi' psi' theta
+> lambda (Forall vs form) (Forall vs' form') = 
+> lambda _ _ = 
+
+
+% > data Form = FT PredSymb [Term] | Not Form | Disj Form Form | Forall VarSymb Form deriving (Eq, Show)
+
+
+
+[(x1, Theta1), (x2, theta2).... (xn, theta_n)]
+% $, [Sub])
+% > mapping :: DomGen -> Mapping
+% > mapping (t, s, s') : gens = (s,s') : mapping gens
+
+Analogical transfer
+
+-- Helper functions for collecting up the substitutions from a generalized domain
+
+> targetSubsOf :: [Gen] -> [Sub] -- collects all the ``right projections'', the substitutions to the target domain
+> targetSubsOf [] = []
+> targetSubsOf gens = map third gens where
+>   third :: (a, b, c) -> c
+>   third (_,_,x) = x
+
+> sourceSubsOf :: [Gen] -> [Sub] -- collects all the ``left projections'', the substitutions to the source domain
+> sourceSubsOf [] = []
+> sourceSubsOf gens = map second gens where
+>   second :: (a, b, c) -> b
+>   second (_,x,_) = x
+
+> instanceOfSub :: Form -> Sub
+> instanceOfSub = undefined
+
+% > --          generalized domain -> analogical pairs (s,t'), where t' is the expanded target domain 
+% > transfer :: DomGen -> [(Form, Form)]
+% > transfer [] = []
+% > transfer ((g, s, t):gens) = (apply s g, f::Form) : transfer gens
+
+> --          generalized domain -> analogical pairs (s,t'), where t' is the expanded target domain 
+> transfer :: [Gen] -> [(Form, Form)]
+> transfer gens = [ (apply s g, apply t' g) | (g, s, _) <- gens, (_, _, t') <- gens ]
+
+
