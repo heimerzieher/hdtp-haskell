@@ -42,7 +42,7 @@ executable myprogram
 
 test-suite simpletests
   type: exitcode-stdio-1.0
-  main-is: Tests.hs
+  main-is: Tests.lhs
   other-modules:
       Paths_report
   hs-source-dirs:

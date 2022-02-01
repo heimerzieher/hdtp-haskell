@@ -24,7 +24,7 @@ executables:
 
 tests:
   simpletests:
-    main: Tests.hs
+    main: Tests.lhs
     source-dirs: test
     dependencies:
       - report
