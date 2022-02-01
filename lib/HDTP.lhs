@@ -1,3 +1,5 @@
+\begin{code}
+
 HDTP Implementation
 ===================
 
@@ -200,7 +202,8 @@ Now we define, for any set of generalizations, an algorithm for deciding which i
 > lgg :: Term -> Term -> [Sub] -> (Term, [Sub])
 > lgg (T s (t:ts)) (T s' (t':ts')) theta  | (T s (t:ts)) == (T s' (t':ts'))  = ((T s (t:ts)), theta) -- Boring case
 >                                     | s == s' && length (t:ts) == length (t':ts') = (T s (map fst (lggRec ts ts' theta))  , snd (last(lggRec ts ts' theta ))) -- Same top constructor case
-                                 
+>
+>                        
 
 
 First attempt, not accounting for Argument insertion or Permutations:
@@ -353,3 +356,4 @@ Analogical transfer
 > transfer gens = [ (apply s g, apply t' g) | (g, s, _) <- gens, (_, _, t') <- gens ]
 
 
+\end{code}

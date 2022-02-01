@@ -1,42 +1,84 @@
 \documentclass[12pt,a4paper]{article}
 \input{latexmacros.tex}
 
-\title{My Report}
-\author{Me}
+
+\title{Heuristic-Driven Theory Projection in Haskell}
+\author{M. Petrowitch, X. Ripoll, R. Tosswill}
 \date{\today}
-\hypersetup{pdfauthor={Me}, pdftitle={My Report}}
+\hypersetup{pdfauthor={M. Petrowitch, X. Ripoll, R. Tosswill}, pdftitle={Heuristic-Driven Theory Projection in Haskell}}
 
 \begin{document}
 
 \maketitle
 
 \begin{abstract}
-We give a toy example of a report in \emph{literate programming} style.
-The main advantage of this is that source code and documentation can
-be written and presented next to each other.
-We use the listings package to typeset Haskell source code nicely.
+In \cite{Schmidt-2014}, the authors provide an overview of Heuristic-Driven
+Theory Projection (HDTP), a logic-based computational model of analogical
+reasoning. In this framework, an agent's knowledge of a familiar domain $S$ is
+represented as a first-order theory, which can be projected into another, less
+familiar domain $T$, by constructing a more general domain $G$, using
+anti-unification of formulas \cite{Plotkin70}. 
+
+To our knowledge, there has been so far no implementation of HDTP in a functional programming language. In the following report, we provide a functional algorithm in Haskell for reproducing many of the aspects of HDTP laid out in \cite{Schmidt-2014}.
 \end{abstract}
 
 \vfill
 
 \tableofcontents
 
+
+
 \clearpage
 
 % We include one file for each section. The ones containing code should
 % be called something.lhs and also mentioned in the .cabal file.
 
-\input{Howto.tex}
+\section{Analogical Reasoning and HDTP}
+Analogical reasoning is a central aspect of human problem-solving skills
+\cite{gentner}, creativity \cite{Besold2015GeneralizeAB}, and concept
+formation \cite{hofstadter2013surfaces}, and as such, is a major focus of
+research in cognitive science. Traditionally, analogical reasoning is understood to be the process in which an agent will attempt to understand an unfamiliar domain of knowledge $T$ (the \textit{target} domain) by noticing its similarity to a more familiar domain $S$ (the \textit{source} domain). This similarity allows an agent to propose novel hypotheses about the target domain, supposing that s/he has discovered a useful similarity between source and target.
 
-\input{lib/Basics.lhs}
+The HDTP framework as laid out in \cite{Schmidt-2014}, approaches analogical reasoning from a syntactic point of view, representing domains of knowledge as first-order theories, and analogies as formal correspondences between formulae of those theories. This makes HDTP particularly amenable to machine implementation, as ... 
+
+HDTP sees the process of analogical reasoning as consisting of three phases: 
+\begin{itemize}
+    \item \textit{Retrieval}, in which the source domain is formalized as a first-order theory;
+    \item \textit{Mapping}, in which a formal correspondence is established between formulae in the source and target domains, by way of \textit{anti-unification};
+    \item \textit{Transfer}, in which the correspondence established in the mapping phase is used to generate new formulae in the target domain, to serve as hypotheses in further reasoning.
+\end{itemize} 
+
+These three phases will guide our discussion of the current Haskell implementation over the course of the next three sections: Section 2 will provide details about how we have implemented first order theories, which will also serve to cover the retrieval phase of HDTP. Sections 3 and 4 will focus on the implementation of restricted higher-order anti-unification, which is the formal process at the heart of the mapping phase of HDTP. Section 5 will lay out how we have implemented a procedure for analogical transfer. In Section 6, we will summarize the achievements of the project so far, as well as what remains to be completed in further work.
+% \input{Howto.tex}
+
+\section{First-Order Theories and Basic Types}
+
+% \input{lib/Basics.lhs}
+
+\section{Basic Substitutions}
+
+% \input{exec/Main.lhs}
+
+\section{Anti-Unification and Least General Generalization}
+Originally proposed in \cite{Plotkin70}, anti-unification is the dual operation to unification in the lattice of substitutions. More formally:
+
+\begin{definition}[Anti-unifier]
+
+\end{definition}
+% \input{test/simpletests.lhs}
+
+\section{Analogical Transfer}
+
+% \input{Profiling.tex}
+
+\section{Conclusion and Future Work}
+% \input{Conclusion.tex}
 
 \input{exec/Main.lhs}
 
-\input{test/simpletests.lhs}
+\input{lib/HDTP.lhs}
 
-\input{Profiling.tex}
-
-\input{Conclusion.tex}
+\input{test/Tests.hs}
 
 \addcontentsline{toc}{section}{Bibliography}
 \bibliographystyle{alpha}

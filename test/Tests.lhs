@@ -1,3 +1,5 @@
+\begin{code}
+
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 
@@ -42,3 +44,5 @@ cases = [ Case { description = "Permutation dist(Y,X,T) > 0"
         ]
 
 -- a0b1123b94254a9db443a84a612b51cc3f3ed537
+
+\end{code}
