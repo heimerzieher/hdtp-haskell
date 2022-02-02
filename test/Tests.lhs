@@ -26,8 +26,12 @@ data Case = Case { description :: String
 
 cases :: [Case]
 cases = [ Case { description = "Permutation dist(Y,X,T) > 0"
-               , input       = (SP $ P ("Y", fun), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
-               , expected    = Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "X") [],T (VS "T") [],T (VS "Y") []]])
+               , input       = (SP $ P ("F", "G", fun), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
+               , expected    = Forall "T" (FT (PS "geq") [T (VS "G") [T (VS "X") [],T (VS "T") [],T (VS "Y") []]])
+               }
+        , Case { description = "Permutation dist(Y,X,T) > 0"
+               , input       = (SP $ P ("W", "G", fun), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
+               , expected    = Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [],T (VS "X") [],T (VS "T") []]])
                }
         , Case { description = "Fixation fix X -> sun, mass(X) > mass(Y), "
                , input       = (SF $ F ("X", "sun"), FT (PS "leq") [ T (FS "mass") [T (VS "X") [] ], T (FS "mass") [T (VS "Y") [] ]  ] )

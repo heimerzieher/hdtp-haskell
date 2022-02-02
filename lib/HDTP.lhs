@@ -153,7 +153,7 @@ Permutation
         (==) _ _ = True
 
 
- newtype Permutation = P (VarSymb, Int -> Int) deriving (Eq, Show)
+ newtype Permutation = P (VarSymb, VarSymb,Int -> Int) deriving (Eq, Show)
 
  -- this function permutes a list (given twice as argument because of the recusion), given a function f from indices (Int) to indices (Int) 
  -- Here it must hold that f assigns only indices smaller than length of the list to such indices, no checking whether f is bijective is done
@@ -164,7 +164,8 @@ Permutation
  applyPermutation :: Permutation -> Form -> Form
  applyPermutation p (FT pr ts) = FT pr (map (permInTerm p) ts) where
    permInTerm :: Permutation -> Term -> Term
-   permInTerm (P (v, f)) (T (VS w) ts) = T (VS w) (permute ts ts f)
+   permInTerm (P (v, v', f)) (T (VS w) ts) | v == w = T (VS v') (permute ts ts f) --- here something is weird
+                                           | otherwise = T (VS w) ts
    permInTerm r (T (FS f) ts) = T (FS f) (map (permInTerm r) ts)
  applyPermutation _ _ = undefined -- Recursive cases handled by apply
 
@@ -174,7 +175,7 @@ Permutation
  fun 2 = 0
 
  perm :: Permutation
- perm = P ("X", fun) 
+ perm = P ("X", "Y", fun) 
 
  -- to test: this is basically a formula P(X(a,b,c)). a,b,c are constants (zero-ary functions)
  someForm :: Form
@@ -305,16 +306,16 @@ The following is an implemenation of that
 
  lgg :: Term -> Term -> [Sub] -> (Term, [Sub])
  lgg (T s (t:ts)) (T s' (t':ts')) theta  | (T s (t:ts)) == (T s' (t':ts'))  = ((T s (t:ts)), theta) -- Boring case
-                                     | s == s' && length (t:ts) == length (t':ts') = (T s (map fst (lggRec ts ts' theta))  , snd (last(lggRec ts ts' theta ))) 
-                                     -- Same top constructor case with f(t1,..tn) f(u1,...un)
-                
+                                         | s == s' && length (t:ts) == length (t':ts') = (T s (map fst termSubsList)  , snd (last(termSubsList))) where
+                                                    termSubsList = lggRec ts ts' theta  -- Same top constructor case with f(t1,..tn) f(u1,...un)
+                                         
 \end{code}
 
 
 \begin{code}
 
- lambdaForTerms :: Term -> Term -> [Sub] -> (Term, [Sub])
- lambdaForTerms = undefined
+  --lambdaForTerms :: Term -> Term -> [Sub] -> (Term, [Sub])
+  --lambdaForTerms = undefined
 
  --lambda :: Form -> Form -> [Sub] -> (Form, [Sub])
  --lambda phi psi theta | form == form' = (form, theta)
