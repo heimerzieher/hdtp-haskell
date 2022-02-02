@@ -5,7 +5,7 @@ HDTP Implementation
 
 \begin{code}
  module HDTP where
- import Data.List ((\\))
+ import Data.List ((\\), find)
 \end{code}
 
 
@@ -313,21 +313,29 @@ The following is an implemenation of that
 
 \begin{code}
 
- lambdaForTerms :: Term -> Term -> [Sub] -> (Term, [Sub])
- lambdaForTerms = undefined
+ -- TODO integrate this type with our preexisting stuff
+ type Subs = (VarSymb, Term, Term)
 
- --lambda :: Form -> Form -> [Sub] -> (Form, [Sub])
- --lambda phi psi theta | form == form' = (form, theta)
- --lambda (FT ps ts) (FT ps' us) theta | ps == ps' = case (ts, us) of
- -- A given predicate symbol has a specific arity, so if ps == ps', then length ts == length us
- --  ([], [])     -> ((FT ps []), theta)
- --  (t:ts, u:us) -> (lambdaForTerms t u)
- --lambda (Not phi) (Not psi) theta = (Not outForm, subs) where (outForm, subs) = lambda phi psi theta
- --lambda (Disj phi phi') (Disj psi psi') theta = (Disj outForm outForm', subs ++ subs') where
- --  (outForm, subs) = lambda phi psi theta
- --  (outForm', subs') = lambda phi' psi' theta
- --lambda (Forall vs form) (Forall vs' form') = undefined
- --lambda _ _ = undefined
+ -- Produces a VarSymb NOT in the provided list.
+ newVariable :: [VarSymb] -> VarSymb
+ newVariable = undefined
+-- (a -> Bool) -> [a] -> Maybe a
+ lambdaForTerms :: Term -> Term -> [Subs] -> (Term, [Subs])
+ lambdaForTerms t u theta | t == u = (t, theta)
+ lambdaForTerms (T (FS f) ts) (T (FS f') us) theta | f == f' = (\(terms, y) -> (T (FS f) terms, y)) $ foldr (\(term, theta) (termAcc, thetaAcc) -> (term:termAcc, theta ++ thetaAcc)) ([], theta) (zipWith (\x y -> lambdaForTerms x y []) ts us)
+ lambdaForTerms t u theta = case find (\(_, t', u') -> t == t' && u == u') theta of
+   Just (x, _, _) -> (T (VS x) [], theta)
+   Nothing -> (T (VS x) [], (x, t, u):theta) where x = newVariable (map (\(x, _, _) -> x) theta)
+
+ lambda :: Form -> Form -> [Subs] -> (Form, [Subs])
+ lambda phi psi theta | phi == psi = (phi, theta)
+ lambda (FT ps ts) (FT ps' us) theta | ps == ps' = (\(terms, y) -> (FT ps terms, y)) $ foldr (\(term, theta) (termAcc, thetaAcc) -> (term:termAcc, theta ++ thetaAcc)) ([], theta) (zipWith (\x y -> lambdaForTerms x y []) ts us)
+ lambda (Not phi) (Not psi) theta = (Not outForm, subs) where (outForm, subs) = lambda phi psi theta
+ lambda (Disj phi phi') (Disj psi psi') theta = (Disj outForm outForm', subs ++ subs') where
+   (outForm, subs) = lambda phi psi theta
+   (outForm', subs') = lambda phi' psi' theta
+ lambda (Forall vs form) (Forall vs' form') theta = undefined -- TODO
+ lambda _ _ _ = undefined
 
 \end{code}
 
