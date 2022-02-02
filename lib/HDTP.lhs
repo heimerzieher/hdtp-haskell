@@ -408,8 +408,7 @@ Now we check a list of lggs and measure their relative complexities
 
 -- test with: cList [SP $ P ("F", "G", fun), SP $ P ("W", "G", fun), SF $ F ("X", "sun"), SR $ R ("X", "Z"), SI $ AI ("F", "F", "W", 2)]
 
-
--- Complexity of a generalisation (taken as a triple of a term and two lists of substituations)
+-- Complexity of a generalisation (taken as a triple of a term and two lists of substituations) we need to fix this to fit the definition from above
 
  cGen :: (Term, [Sub], [Sub]) -> Comp
  cGen (t, s, s') = cList s + cList s'
@@ -422,7 +421,7 @@ Now we check a list of lggs and measure their relative complexities
  mySubs = [SP $ P ("F", "G", fun), SP $ P ("W", "G", fun), SF $ F ("X", "sun"), SR $ R ("X", "Z"), SI $ AI ("F", "F", "W", 2)]
  mySubs2 = [SP $ P ("F", "G", fun), SF $ F ("X", "sun"), SI $ AI ("F", "F", "W", 2)]
 
- myterm = T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]
+ myterm = T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") []]
 
  -- test with: prefGen [(myterm, mySubs, mySubs), (myterm, mySubs2, mySubs2)]
 
