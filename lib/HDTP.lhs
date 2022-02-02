@@ -30,7 +30,7 @@ Then, we define our terms, both first- and second-order
  data Term = T TSymb [Term] deriving (Eq, Show) -- Find a way to restrict this to respect sorts
  data Form = FT PredSymb [Term] | Not Form | Disj Form Form | Forall VarSymb Form deriving (Eq, Show)
 
- newtype Sort = S String deriving Eq
+ newtype Sort = S String deriving (Eq, Show)
  symbAr :: TSymb -> ([Sort], Sort)
  symbAr (VS "F") = ([S "a"], S "b")
  symbAr (VS "F'") = ([S "a"], S "b")
@@ -300,14 +300,16 @@ The following is an implemenation of that
  term1 = T (FS "B") list1
  subs0 = [SR $ R ("X", "Z")]
 
- lggRec :: [Term] -> [Term] -> [Sub] -> [(Term, [Sub])]
- lggRec [] [] theta = []
- lggRec (u:us) (t:ts) theta = (lgg u t theta) : lggRec us ts (snd (lgg u t theta))
+
 
  lgg :: Term -> Term -> [Sub] -> (Term, [Sub])
  lgg (T s (t:ts)) (T s' (t':ts')) theta  | (T s (t:ts)) == (T s' (t':ts'))  = ((T s (t:ts)), theta) -- Boring case
-                                         | s == s' && length (t:ts) == length (t':ts') = (T s (map fst termSubsList)  , snd (last(termSubsList))) where
-                                                    termSubsList = lggRec ts ts' theta  -- Same top constructor case with f(t1,..tn) f(u1,...un)
+                                         | s == s' && length (t:ts) == length (t':ts') = (T s (map fst termSubsList)  , snd (last(termSubsList))) where -- Same top constructor case with f(t1,..tn) f(u1,...un)
+                                                    termSubsList = lggRec ts ts' theta  
+                                                    lggRec :: [Term] -> [Term] -> [Sub] -> [(Term, [Sub])]
+                                                    lggRec [] [] theta = []
+                                                    lggRec (u:us) (t:ts) theta = (lgg u t theta) : lggRec us ts (snd (lgg u t theta))
+
                                          
 \end{code}
 
@@ -383,5 +385,47 @@ Helper functions for collecting up the substitutions from a generalized domain
 -- transfer :: [Gen] -> [(Form, Form)]
 -- transfer gens = [ (apply s g, apply t' g) | (g, s, _) <- gens, (_, _, t') <- gens ]
 
+
+\end{code}
+
+Now we check a list of lggs and measure their relative complexities
+
+\begin{code}
+ type Comp = Int
+
+-- Complexity of one simple substitution
+
+ cSimple :: Sub -> Comp
+ cSimple (SR r) = 0
+ cSimple (SF f) = 1
+ cSimple (SI (AI (f, f', g, i))) = length (fst (symbAr(VS g))) + 1  ---- We look at the length of the arity of G (the variable we wish to insert)
+ cSimple (SP p) = 1
+
+-- Complexity of a list of substitutions
+ cList :: [Sub] -> Comp
+ cList [] = 0
+ cList (x:xs) = cSimple x + cList xs 
+
+-- test with: cList [SP $ P ("F", "G", fun), SP $ P ("W", "G", fun), SF $ F ("X", "sun"), SR $ R ("X", "Z"), SI $ AI ("F", "F", "W", 2)]
+
+
+-- Complexity of a generalisation (taken as a triple of a term and two lists of substituations)
+
+ cGen :: (Term, [Sub], [Sub]) -> Comp
+ cGen (t, s, s') = cList s + cList s'
+
+ prefGen :: [(Term, [Sub], [Sub])] -> (Term, [Sub], [Sub])
+ prefGen [x] = x
+ prefGen (x:xs) | cGen x <= cGen (prefGen xs) = x
+                | otherwise = prefGen xs
+
+ mySubs = [SP $ P ("F", "G", fun), SP $ P ("W", "G", fun), SF $ F ("X", "sun"), SR $ R ("X", "Z"), SI $ AI ("F", "F", "W", 2)]
+ mySubs2 = [SP $ P ("F", "G", fun), SF $ F ("X", "sun"), SI $ AI ("F", "F", "W", 2)]
+
+ myterm = T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]
+
+ -- test with: prefGen [(myterm, mySubs, mySubs), (myterm, mySubs2, mySubs2)]
+
+ -- output is (myterm, mySubs2, mySubs2)
 
 \end{code}
