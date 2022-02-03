@@ -319,9 +319,15 @@ The following is an implemenation of that
  -- TODO integrate this type with our preexisting stuff
  type Subs = (VarSymb, Term, Term)
 
+
+
  -- Produces a VarSymb NOT in the provided list.
+ -- we exploit haskell's lazyness, we just take the first string of the list of all possible strings that are not in the given list
+ 
  newVariable :: [VarSymb] -> VarSymb
- newVariable = undefined
+ newVariable xs = head (allVarSymb \\ xs) where 
+    allVarSymb = [ c : s | s <- "": allVarSymb, c <- ['A'..'Z']]
+
 -- (a -> Bool) -> [a] -> Maybe a
  lambdaForTerms :: Term -> Term -> [Subs] -> (Term, [Subs])
  lambdaForTerms t u theta | t == u = (t, theta)
@@ -339,6 +345,10 @@ The following is an implemenation of that
    (outForm', subs') = lambda phi' psi' theta
  lambda (Forall vs form) (Forall vs' form') theta = undefined -- TODO
  lambda _ _ _ = undefined
+
+ -- test cases
+
+ test123 = lambda (FT (PS "geq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (FS "planet") [] ]  ]) (FT (PS "geq") [ T (FS "mass") [T (FS "nucleus") [] ], T (FS "mass") [T (FS "electron") [] ]  ]) []
 
 \end{code}
 
