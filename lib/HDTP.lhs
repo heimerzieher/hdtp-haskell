@@ -496,7 +496,8 @@ Now we check a list of lggs and measure their relative complexities
 -- Complexity of a list of substitutions
  cList :: [Sub] -> Comp
  cList [] = 0
- cList (x:xs) = cSimple x + cList xs 
+ cList xs = foldr ((+) . cSimple) 0 xs
+
 
 -- test with: cList [SP $ P ("F", "G", fun), SP $ P ("W", "G", fun), SF $ F ("X", "sun"), SR $ R ("X", "Z"), SI $ AI ("F", "F", "W", 2)]
 

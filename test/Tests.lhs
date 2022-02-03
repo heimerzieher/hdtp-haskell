@@ -20,7 +20,8 @@ specs = do
                 where 
                       testSubs CaseSubs{..} = it descriptionSubs $ (apply (fst inputSubs) (snd inputSubs)) `shouldBe` expectedSubs
                       testLambda CaseLambda{..} = it descriptionLambda $ (lambda (head $ map (\(a, _, _) -> a) (inputLambda : [])) (head $ map (\(_, b, _) -> b) (inputLambda : [])) (head $ map (\(_, _, c) -> c) (inputLambda : []))) `shouldBe` expectedLambda
-       
+                      testLambdaFT CaseLambdaFT{..} = it descriptionLambdaFT $ (lambdaForTerms (head $ map (\(a, _, _) -> a) (inputLambdaFT : [])) (head $ map (\(_, b, _) -> b) (inputLambdaFT : [])) (head $ map (\(_, _, c) -> c) (inputLambdaFT : []))) `shouldBe` expectedLambdaFT
+
 
 
 
@@ -74,7 +75,7 @@ casesLambda = [ CaseLambda { descriptionLambda = "mass(sun) > mass(planet), mass
 
                , CaseLambda { descriptionLambda = "DummyPr(height(in(water, beaker), t)), DummyPr(temp(in(coffee, cup), t)) -> DummyPr(X(Y, t))"
                , inputLambda       = ((FT (PS "DummyPr") [T (FS "height") [T (FS "in") [T (FS "water") [], T (FS "beaker") []], T (VS "t") []]]), (FT (PS "DummyPr") [T (FS "temp") [T (FS "in") [T (FS "coffee") [], T (FS "cup") []], T (VS "t") []]]), [])
-               , expectedLambda    = (FT (PS "DummyPr") [T (VS "X") [T (VS "Y") [], T (VS "t") []]], [])
+               , expectedLambda    = (FT (PS "DummyPr") [T (VS "X") [T (VS "Y") [], T (VS "t") []]], []) -- TODO: according to the paper this should be the right solution. But we get sth different.
                }
 
                , CaseLambda { descriptionLambda = "f(g(a, b, c), d), f(d, h (a)) -> f(X, Y)"
@@ -90,6 +91,11 @@ casesLambda = [ CaseLambda { descriptionLambda = "mass(sun) > mass(planet), mass
                
 
         ]
+
+data CaseLambdaFT = CaseLambdaFT { descriptionLambdaFT :: String
+                 , inputLambdaFT       :: (Term, Term, [Subs])
+                 , expectedLambdaFT    :: (Term, [Subs])
+                 }
 
 -- a0b1123b94254a9db443a84a612b51cc3f3ed537
 
