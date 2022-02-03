@@ -5,7 +5,7 @@ HDTP Implementation
 
 \begin{code}
  module HDTP where
- import Data.List ((\\), find)
+ import Data.List ((\\), find, sortBy)
 \end{code}
 
 
@@ -253,9 +253,12 @@ First, Domains
 Next, alignments, which are
 
 \begin{code}
--- type Align = [(Form, Form)]
+ type Align = [(Form, Form)]
 
--- align :: Domain -> Domain -> Align
+ -- Calculate all the NTGGs from all possible pairs between the source domain (of size n) and the target domain (of size m), and then pick the m pairs with the lowest complexity
+ align :: Domain -> Domain -> Align
+ align d d' = take (length d') $ sortBy (\p p' -> complexity p `compare` complexity p') [ (phi, psi) | phi <- d, psi <- d' ] where
+   complexity (phi, psi) = map (cGen . subsToGen undefined) $ snd $ lambda phi psi []
 \end{code}
 
 Then, domain generalizations
@@ -492,10 +495,10 @@ Now we check a list of lggs and measure their relative complexities
 
 -- Complexity of a generalisation (taken as a triple of a term and two lists of substituations) we need to fix this to fit the definition from above
 
- cGen :: (Term, [Sub], [Sub]) -> Comp
- cGen (t, s, s') = cList s + cList s'
+ cGen :: Gen -> Comp
+ cGen (_, s, s') = cList s + cList s'
 
- prefGen :: [(Term, [Sub], [Sub])] -> (Term, [Sub], [Sub])
+ prefGen :: [Gen] -> Gen
  prefGen [x] = x
  prefGen (x:xs) | cGen x <= cGen (prefGen xs) = x
                 | otherwise = prefGen xs
