@@ -384,11 +384,11 @@ notion of ``complexity of generalization'' discussed in
     \begin{equation}
     \mathcal{C}(bs) =
     \begin{cases*}
-      $0$ & if $bs$ is a renaming \\
-      $1$ & if $bs$ is a fixation \\
-      $k+1$ & if $bs$ is an argument insertion, and\\
-      & \quad the inserted argument is a variable of arity $k$ \\
-      $1$ & if $bs$ is a permutation \\
+      0 & \text{if} bs \text{is a renaming} \\
+      1 & \text{if} bs \text{is a fixation} \\
+      k+1 & \text{if} bs \text{is an argument insertion, and}\\
+       \quad \text{the inserted argument is a variable of arity k} \\
+      1 & \text{if} bs \text{is a permutation} \\
     \end{cases*}
   \end{equation}
   
