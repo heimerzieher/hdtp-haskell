@@ -332,7 +332,8 @@ The following is an implemenation of that
 
  sameTop :: [Term] -> [Term] -> [Subs] -> [(Term, [Subs])]
  sameTop [] [] theta = []
- sameTop (u:us) (t:ts) theta = lambdaForTerms u t theta : sameTop us ts (snd (lambdaForTerms u t theta))
+ sameTop (u:us) (t:ts) theta = lambdaOfTerms : sameTop us ts (snd lambdaOfTerms) where
+                                    lambdaOfTerms = lambdaForTerms u t theta
 
  lambdaForTerms :: Term -> Term -> [Subs] -> (Term, [Subs])
  lambdaForTerms t u theta | t == u = (t, theta) -- Boring case

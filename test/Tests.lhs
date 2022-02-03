@@ -11,40 +11,58 @@ import Test.Hspec.Runner (configFastFail, defaultConfig, hspecWith)
 import HDTP
 
 main :: IO ()
-main = hspecWith defaultConfig {configFastFail = True} specs
+main = hspecWith defaultConfig {configFastFail = True} $ do
+        
+        describe "apply" $ do
+               for_ casesSubs test where
+                     test CaseSubs{..} = it descriptionSubs $ (apply (fst inputSubs) (snd inputSubs)) `shouldBe` expectedSubs
+                     
+        describe "lambda" $ do
+               for_ casesSubs test where
+                     test CaseSubs{..} = it descriptionSubs $ (apply (fst inputSubs) (snd inputSubs)) `shouldBe` expectedSubs
 
-specs :: Spec
-specs = describe "apply" $ for_ cases test
-  where
-    test Case{..} = it description $ (apply (fst input) (snd input)) `shouldBe` expected
 
 
-data Case = Case { description :: String
-                 , input       :: (Sub, Form)
-                 , expected    :: Form
+data CaseSubs = CaseSubs { descriptionSubs :: String
+                 , inputSubs       :: (Sub, Form)
+                 , expectedSubs    :: Form
                  }
 
-cases :: [Case]
-cases = [ Case { description = "Permutation dist(Y,X,T) > 0"
-               , input       = (SP $ P ("F", "G", fun), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
-               , expected    = Forall "T" (FT (PS "geq") [T (VS "G") [T (VS "X") [],T (VS "T") [],T (VS "Y") []]])
+casesSubs :: [CaseSubs]
+casesSubs = [ CaseSubs { descriptionSubs = "Permutation dist(Y,X,T) > 0"
+               , inputSubs       = (SP $ P ("F", "G", fun), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
+               , expectedSubs    = Forall "T" (FT (PS "geq") [T (VS "G") [T (VS "X") [],T (VS "T") [],T (VS "Y") []]])
                }
-        , Case { description = "Permutation dist(Y,X,T) > 0"
-               , input       = (SP $ P ("W", "G", fun), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
-               , expected    = Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [],T (VS "X") [],T (VS "T") []]])
+        , CaseSubs { descriptionSubs = "Permutation dist(Y,X,T) > 0"
+               , inputSubs       = (SP $ P ("W", "G", fun), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
+               , expectedSubs    = Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [],T (VS "X") [],T (VS "T") []]])
                }
-        , Case { description = "Fixation fix X -> sun, mass(X) > mass(Y), "
-               , input       = (SF $ F ("X", "sun"), FT (PS "leq") [ T (FS "mass") [T (VS "X") [] ], T (FS "mass") [T (VS "Y") [] ]  ] )
-               , expected    = FT (PS "leq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (VS "Y") [] ]  ]
+        , CaseSubs { descriptionSubs = "Fixation fix X -> sun, mass(X) > mass(Y), "
+               , inputSubs       = (SF $ F ("X", "sun"), FT (PS "leq") [ T (FS "mass") [T (VS "X") [] ], T (FS "mass") [T (VS "Y") [] ]  ] )
+               , expectedSubs    = FT (PS "leq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (VS "Y") [] ]  ]
                }
-        , Case { description = "Renaming X -> Y, mass(X) > mass(Z), "
-               , input       = (SR $ R ("X", "Z"), FT (PS "leq") [ T (FS "mass") [T (VS "X") [] ], T (FS "mass") [T (VS "Y") [] ]  ] )
-               , expected    = FT (PS "leq") [ T (FS "mass") [T (VS "Z") [] ], T (FS "mass") [T (VS "Y") [] ]  ]
+        , CaseSubs { descriptionSubs = "Renaming X -> Y, mass(X) > mass(Z), "
+               , inputSubs       = (SR $ R ("X", "Z"), FT (PS "leq") [ T (FS "mass") [T (VS "X") [] ], T (FS "mass") [T (VS "Y") [] ]  ] )
+               , expectedSubs    = FT (PS "leq") [ T (FS "mass") [T (VS "Z") [] ], T (FS "mass") [T (VS "Y") [] ]  ]
                }
-        , Case { description = "AI F F W 2, F(X,Y,Z)"
-               , input       = (SI $ AI ("F", "F", "W", 2), FT (PS "P") [T (VS "F") [ T (FS "X") [], T (FS "Y") [], T (FS "Z") []]])
-               , expected    = FT (PS "P") [T (VS "F") [ T (FS "X") [], T (FS "Y") [], T (VS "W") [T (FS "Z") []]]]
+        , CaseSubs { descriptionSubs = "AI F F W 2, F(X,Y,Z)"
+               , inputSubs       = (SI $ AI ("F", "F", "W", 2), FT (PS "P") [T (VS "F") [ T (FS "X") [], T (FS "Y") [], T (FS "Z") []]])
+               , expectedSubs    = FT (PS "P") [T (VS "F") [ T (FS "X") [], T (FS "Y") [], T (VS "W") [T (FS "Z") []]]]
                }
+        ]
+
+
+data CaseLambda = CaseLambda { descriptionLambda :: String
+                 , inputLambda       :: (Form, Form, [Subs])
+                 , expectedLambda    :: (Form, [Subs])
+                 }
+
+casesLambda :: [CaseLambda]
+casesLambda = [ CaseLambda { descriptionLambda = "mass(sun) > mass(planet), mass(nucleus) > mass(electron)"
+               , inputLambda       = ((FT (PS "geq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (FS "planet") [] ]  ]), (FT (PS "geq") [ T (FS "mass") [T (FS "nucleus") [] ], T (FS "mass") [T (FS "electron") [] ]  ]), [])
+               , expectedLambda    = (FT (PS "geq") [T (FS "mass") [T (VS "X") []],T (FS "mass") [T (VS "Y") []]], [])
+               }
+
         ]
 
 -- a0b1123b94254a9db443a84a612b51cc3f3ed537
