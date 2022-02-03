@@ -255,10 +255,17 @@ Next, alignments, which are
 \begin{code}
  type Align = [(Form, Form)]
 
+
+-- type Gen = (Form, [Sub], [Sub])
+-- type Subs = (VarSymb, Term, Term)
+
  -- Calculate all the NTGGs from all possible pairs between the source domain (of size n) and the target domain (of size m), and then pick the m pairs with the lowest complexity
- align :: Domain -> Domain -> Align
- align d d' = take (length d') $ sortBy (\p p' -> complexity p `compare` complexity p') [ (phi, psi) | phi <- d, psi <- d' ] where
-   complexity (phi, psi) = map (cGen . subsToGen undefined) $ snd $ lambda phi psi []
+ -- output: [(0,1,2,3,4)] such that 2 <-1- 0 -3-> 4
+ align :: Domain -> Domain -> [(Form, [[Sub]], Form, [[Sub]], Form)]
+ align d d' = take (length d') $ sortBy (\p p' -> complexity p `compare` complexity p') [ result phi psi | phi <- d, psi <- d' ] where
+   complexity (_, subPhi, _, subPsi, _) = cList (concat subPhi) + cList (concat subPsi)
+   result phi psi = (antiUnifier, sourceSubsOf $ map (subsToGen phi) subs, phi, targetSubsOf $ map (subsToGen psi) subs, psi) where
+     (antiUnifier, subs) = lambda phi psi []
 \end{code}
 
 Then, domain generalizations
