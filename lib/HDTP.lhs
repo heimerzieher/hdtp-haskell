@@ -420,6 +420,8 @@ The following is an implemenation of that
  --output should be FT (PS "geq") [T (FS "mass") [T (VS "X") []],T (FS "mass") [T (VS "Y") []]]
 
 
+ -- test555 = lambdaForTerms (T (FS "height") [T (FS "in") [T (FS "water") [], T (FS "beaker") []], T (VS "t") []]) (T (FS "temp") [T (FS "in") [T (FS "coffee") [], T (FS "cup") []], T (VS "t") []]) []
+
 \end{code}
 
 \begin{code}
