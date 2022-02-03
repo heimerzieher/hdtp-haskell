@@ -58,6 +58,9 @@ Now we define subsitution as they did
  apply r (Not form) = Not (apply r form)
  apply r (Disj form form') = Disj (apply r form) (apply r form')
  apply r (Forall w form) = Forall w (apply r form) -- TODO should a renaming rename bound variables?
+
+ apply' :: [Sub] -> Form -> Form
+ apply' subs phi = foldr apply phi subs
 \end{code}
 
 A general substitution, usually not allowed:
@@ -277,7 +280,40 @@ Generalization
 Next, we define, for any two terms, a generalization
 
 \begin{code}
- type Gen = (Form, Sub, Sub)
+ type Gen = (Form, [Sub], [Sub])
+ type Subs = (VarSymb, Term, Term)
+
+ -- First argument: the "context" formula in which we apply the second argument
+ -- Second argument: t <- x -> u
+ -- Result: the context formula and the corresponding substitutions in it
+ subsToGen :: Form -> Subs -> Gen
+ subsToGen context (vs, t, u) = (context, subsToGenHelper context vs t, subsToGenHelper context vs u)
+
+ -- Variables in a given term
+ varsIn :: Form -> [VarSymb]
+ varsIn (FT (PS _) ts) = concatMap varsInTerm ts
+ varsIn (Not phi) = varsIn phi
+ varsIn (Disj phi psi) = varsIn phi ++ varsIn psi
+ varsIn (Forall _ phi) = varsIn phi -- TODO ?
+
+ varsInTerm :: Term -> [VarSymb]
+ varsInTerm = undefined
+
+ -- First argument: the "context" formula in which we apply the second and third argument
+ -- Second argument: x
+ -- Third argument: t
+ -- Result: the (chain of) substitutions that result in x -> t inside of context
+ subsToGenHelper :: Form -> VarSymb -> Term -> [Sub]
+ subsToGenHelper phi vs (T (FS fs) ts) = SF (F (newVar, fs)) : subsToGenHelperRec (newVar:varsIn phi) vs (T (VS newVar) ts) where
+   newVar = newVariable (varsIn phi)
+ subsToGenHelper _ _ _ = undefined -- TODO
+
+ subsToGenHelperRec :: [VarSymb] -> VarSymb -> Term -> [Sub]
+ subsToGenHelperRec vars vs (T (VS vs') (T (FS fs) _:ts)) = SF (F (newVar, fs)) : SI (AI (newVar', vs', newVar, 0)) : subsToGenHelperRec (newVar':newVar:vars) vs (T (VS vs') ts) where
+   newVar = newVariable vars
+   newVar' = newVariable (newVar:vars)
+ subsToGenHelperRec _ vs (T (VS vs') []) = [SR (R (vs, vs'))]
+ subsToGenHelperRec _ _ _ = undefined -- TODO which cases can actually happen?
 
 -- gnrlz :: Term -> Term -> Gen
 -- gnrlz s t = (g)
@@ -316,12 +352,6 @@ The following is an implemenation of that
 
 
 \begin{code}
-
- -- TODO integrate this type with our preexisting stuff
- type Subs = (VarSymb, Term, Term)
-
-
-
  -- Produces a VarSymb NOT in the provided list. Works for any number of variables.
  -- we exploit haskell's lazyness, we just take the first string of the infinite list of all possible strings that are not in the list given as argument
  -- we add X,Y,Z,W at the beginning of the infinite list of all possible variable names because those are our preferred names
@@ -411,13 +441,13 @@ Helper functions for collecting up the substitutions from a generalized domain
 
 \begin{code}
 
- targetSubsOf :: [Gen] -> [Sub] -- collects all the ``right projections'', the substitutions to the target domain
+ targetSubsOf :: [Gen] -> [[Sub]] -- collects all the ``right projections'', the substitutions to the target domain
  targetSubsOf [] = []
  targetSubsOf gens = map third gens where
    third :: (a, b, c) -> c
    third (_,_,x) = x
 
- sourceSubsOf :: [Gen] -> [Sub] -- collects all the ``left projections'', the substitutions to the source domain
+ sourceSubsOf :: [Gen] -> [[Sub]] -- collects all the ``left projections'', the substitutions to the source domain
  sourceSubsOf [] = []
  sourceSubsOf gens = map second gens where
    second :: (a, b, c) -> b
@@ -432,8 +462,8 @@ Helper functions for collecting up the substitutions from a generalized domain
 --  transfer ((g, s, t):gens) = (apply s g, f::Form) : transfer gens
 
 -- --          generalized domain -> analogical pairs (s,t'), where t' is the expanded target domain 
--- transfer :: [Gen] -> [(Form, Form)]
--- transfer gens = [ (apply s g, apply t' g) | (g, s, _) <- gens, (_, _, t') <- gens ]
+ transfer :: [Gen] -> [(Form, Form)]
+ transfer gens = [ (apply' s g, apply' t' g) | (g, s, _) <- gens, (_, _, t') <- gens ]
 
 
 \end{code}
