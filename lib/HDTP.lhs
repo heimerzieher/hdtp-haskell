@@ -295,11 +295,11 @@ The following is an implemenation of that
 
 \begin{code}
 
+{-
  list1 = [T (VS "X") [],T (VS "T") [],T (VS "Y") []]
  list2 = [T (VS "A") [],T (VS "B") [],T (VS "C") []]
  term1 = T (FS "B") list1
  subs0 = [SR $ R ("X", "Z")]
-
 
 
  lgg :: Term -> Term -> [Sub] -> (Term, [Sub])
@@ -310,7 +310,8 @@ The following is an implemenation of that
                                                     lggRec [] [] theta = []
                                                     lggRec (u:us) (t:ts) theta = (lgg u t theta) : lggRec us ts (snd (lgg u t theta))
 
-                                         
+
+-}                                     
 \end{code}
 
 
@@ -321,24 +322,31 @@ The following is an implemenation of that
 
 
 
- -- Produces a VarSymb NOT in the provided list.
- -- we exploit haskell's lazyness, we just take the first string of the list of all possible strings that are not in the given list
- 
+ -- Produces a VarSymb NOT in the provided list. Works for any number of variables.
+ -- we exploit haskell's lazyness, we just take the first string of the infinite list of all possible strings that are not in the list given as argument
+ -- we add X,Y,Z,W at the beginning of the infinite list of all possible variable names because those are our preferred names
  newVariable :: [VarSymb] -> VarSymb
  newVariable xs = head (allVarSymb \\ xs) where 
-    allVarSymb = [ c : s | s <- "": allVarSymb, c <- ['A'..'Z']]
+    allVarSymb = ["X","Y","Z","W"] ++ [ c : s | s <- "": allVarSymb, c <- ['A'..'Z']]
 
--- (a -> Bool) -> [a] -> Maybe a
+
+ sameTop :: [Term] -> [Term] -> [Subs] -> [(Term, [Subs])]
+ sameTop [] [] theta = []
+ sameTop (u:us) (t:ts) theta = lambdaForTerms u t theta : sameTop us ts (snd (lambdaForTerms u t theta))
+
  lambdaForTerms :: Term -> Term -> [Subs] -> (Term, [Subs])
- lambdaForTerms t u theta | t == u = (t, theta)
- lambdaForTerms (T (FS f) ts) (T (FS f') us) theta | f == f' = (\(terms, y) -> (T (FS f) terms, y)) $ foldr (\(term, theta) (termAcc, thetaAcc) -> (term:termAcc, theta ++ thetaAcc)) ([], theta) (zipWith (\x y -> lambdaForTerms x y []) ts us)
+ lambdaForTerms t u theta | t == u = (t, theta) -- Boring case
+ lambdaForTerms (T (FS f) ts) (T (FS f') us) theta | f == f' = (T (FS f) (map fst termSubsList)  , snd (last termSubsList)) where -- Same top constructor case 
+                                                        termSubsList = sameTop ts us theta 
  lambdaForTerms t u theta = case find (\(_, t', u') -> t == t' && u == u') theta of
    Just (x, _, _) -> (T (VS x) [], theta)
    Nothing -> (T (VS x) [], (x, t, u):theta) where x = newVariable (map (\(x, _, _) -> x) theta)
 
+-- (a -> Bool) -> [a] -> Maybe a
  lambda :: Form -> Form -> [Subs] -> (Form, [Subs])
  lambda phi psi theta | phi == psi = (phi, theta)
- lambda (FT ps ts) (FT ps' us) theta | ps == ps' = (\(terms, y) -> (FT ps terms, y)) $ foldr (\(term, theta) (termAcc, thetaAcc) -> (term:termAcc, theta ++ thetaAcc)) ([], theta) (zipWith (\x y -> lambdaForTerms x y []) ts us)
+ lambda (FT ps ts) (FT ps' us) theta | ps == ps' = (FT ps (map fst prSubsList)  , snd (last prSubsList)) where -- Same top constructor case  
+                                                        prSubsList = sameTop ts us theta 
  lambda (Not phi) (Not psi) theta = (Not outForm, subs) where (outForm, subs) = lambda phi psi theta
  lambda (Disj phi phi') (Disj psi psi') theta = (Disj outForm outForm', subs ++ subs') where
    (outForm, subs) = lambda phi psi theta
@@ -346,9 +354,40 @@ The following is an implemenation of that
  lambda (Forall vs form) (Forall vs' form') theta = undefined -- TODO
  lambda _ _ _ = undefined
 
+{-
+-- (a -> Bool) -> [a] -> Maybe a
+ lambdaForTermsOld :: Term -> Term -> [Subs] -> (Term, [Subs])
+ lambdaForTermsOld t u theta | t == u = (t, theta)
+ lambdaForTermsOld (T (FS f) ts) (T (FS f') us) theta | f == f' = (\(terms, y) -> (T (FS f) terms, y)) $ foldr (\(term, theta) (termAcc, thetaAcc) -> (term:termAcc, theta ++ thetaAcc)) ([], theta) (zipWith (\x y -> lambdaForTerms x y []) ts us)
+ lambdaForTermsOld t u theta = case find (\(_, t', u') -> t == t' && u == u') theta of
+   Just (x, _, _) -> (T (VS x) [], theta)
+   Nothing -> (T (VS x) [], (x, t, u):theta) where x = newVariable (map (\(x, _, _) -> x) theta)
+
+ lambdaOld :: Form -> Form -> [Subs] -> (Form, [Subs])
+ lambdaOld phi psi theta | phi == psi = (phi, theta)
+ lambdaOld (FT ps ts) (FT ps' us) theta | ps == ps' = (\(terms, y) -> (FT ps terms, y)) $ foldr (\(term, theta) (termAcc, thetaAcc) -> (term:termAcc, theta ++ thetaAcc)) ([], theta) (zipWith (\x y -> lambdaForTerms x y []) ts us)
+ lambdaOld (Not phi) (Not psi) theta = (Not outForm, subs) where (outForm, subs) = lambda phi psi theta
+ lambdaOld (Disj phi phi') (Disj psi psi') theta = (Disj outForm outForm', subs ++ subs') where
+   (outForm, subs) = lambda phi psi theta
+   (outForm', subs') = lambda phi' psi' theta
+ lambdaOld (Forall vs form) (Forall vs' form') theta = undefined -- TODO
+ lambdaOld _ _ _ = undefined
+ -}
+
  -- test cases
 
- test123 = lambda (FT (PS "geq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (FS "planet") [] ]  ]) (FT (PS "geq") [ T (FS "mass") [T (FS "nucleus") [] ], T (FS "mass") [T (FS "electron") [] ]  ]) []
+ testNew = fst $ lambdaForTerms (T (FS "geq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (FS "planet") [] ]  ]) (T (FS "geq") [ T (FS "mass") [T (FS "nucleus") [] ], T (FS "mass") [T (FS "electron") [] ]  ]) []
+
+ --testOld= fst $ lambdaForTermsOld (T (FS "geq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (FS "planet") [] ]  ]) (T (FS "geq") [ T (FS "mass") [T (FS "nucleus") [] ], T (FS "mass") [T (FS "electron") [] ]  ]) []
+
+ test2New = fst $ lambda (FT (PS "geq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (FS "planet") [] ]  ]) (FT (PS "geq") [ T (FS "mass") [T (FS "nucleus") [] ], T (FS "mass") [T (FS "electron") [] ]  ]) []
+
+ --output should be FT (PS "geq") [T (FS "mass") [T (VS "X") []],T (FS "mass") [T (VS "Y") []]]
+
+ --test2Old = fst $ lambdaOld (FT (PS "geq") [ T (FS "mass") [T (FS "sun") [] ], T (FS "mass") [T (FS "planet") [] ]  ]) (FT (PS "geq") [ T (FS "mass") [T (FS "nucleus") [] ], T (FS "mass") [T (FS "electron") [] ]  ]) []
+
+ --output should be FT (PS "geq") [T (FS "mass") [T (VS "X") []],T (FS "mass") [T (VS "Y") []]]
+
 
 \end{code}
 
