@@ -150,7 +150,7 @@ To implement this algorithm in Haskell, we first implement a helper function whi
     allVarSymb = ["X","Y","Z","W"] ++ [ c : s | s <- "": allVarSymb, c <- ['A'..'Z']]
 \end{code}
 
-
+TODO: Add some stuff here about lambdaForTerms.
 
 \begin{code}
 
@@ -164,7 +164,7 @@ To implement this algorithm in Haskell, we first implement a helper function whi
 
 \end{code}
 
-Here we use the helper function \texttt{sameTop} that takes two lists of terms and a list of generalisations and computes recursively the i-th generalisation taking the i-th terms from the lists and the (i-1)-th generalisation. The result is of the form $[(x_1, \theta_1), \dots (x_n, \theta_n)]$.
+Here we use the helper function \texttt{sameTop} that takes two lists of terms $[t_1,\dots,t_n]$, $[u_1,\dots,u_n]$ and a list of generalisations $\theta_0$ and computes recursively the i-th generalisation taking the i-th terms from the lists and the (i-1)-th generalisation. The result is of the form $[(x_1, \theta_1), \dots (x_n, \theta_n)]$. 
 
 \begin{code}
  sameTop :: [Term] -> [Term] -> [TermGen] -> [(Term, [TermGen])]
