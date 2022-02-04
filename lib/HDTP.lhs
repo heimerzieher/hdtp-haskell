@@ -52,7 +52,7 @@ Now if we
 TODO Xavier explain how we manage arity and how we use it as a database
 
 \begin{code}
- -- newtype Term Sg [[s], [f], [p], af, ap] [v] = v | f [Term] deriving (Eq,Ord,Show)
+ -- newtype Term Sg [[s], [f], [p], af, ap] [v] = v | f [Term] deriving (Eq,Ord,Show) TODO: Remove?
  data TSymb = VS VarSymb | FS FunSymb deriving (Eq, Show)
  data Term = T TSymb [Term] deriving (Eq, Show) -- Find a way to restrict this to respect sorts
  data Form = FT PredSymb [Term] | Not Form | Disj Form Form | Forall VarSymb Form deriving (Eq, Show)
@@ -150,12 +150,12 @@ To implement this algorithm in Haskell, we first implement a helper function whi
     allVarSymb = ["X","Y","Z","W"] ++ [ c : s | s <- "": allVarSymb, c <- ['A'..'Z']]
 \end{code}
 
-TODO: Add some stuff here about lambdaForTerms.
+The function \texttt{lambdaForTerms} is an implementation of the lgg algorithm for terms as stated above and in \cite[3]{Tabareau2013AntiUnificationWT}. 
 
 \begin{code}
 
  lambdaForTerms :: Term -> Term -> [TermGen] -> (Term, [TermGen])
- lambdaForTerms t u theta | t == u = (t, theta) -- Boring case
+ lambdaForTerms t u theta | t == u = (t, theta)
  lambdaForTerms (T (FS f) ts) (T (FS f') us) theta | f == f' = (T (FS f) (map fst termSubsList), snd (last termSubsList)) where 
    termSubsList = sameTop ts us theta
  lambdaForTerms t u theta = case find (\(_, t', u') -> t == t' && u == u') theta of
@@ -188,7 +188,7 @@ We have adapted it to pairs of general formulas, provided that they have the sam
    (outForm, subs) = lambda phi psi theta
    (outForm', subs') = lambda phi' psi' theta
  lambda (Forall vs phi) (Forall _ psi) theta = (Forall vs outForm, subs) where (outForm, subs) = lambda phi psi theta
- lambda _ _ _ = undefined -- We only anti-unify formulas that have the same predicate structure
+ lambda _ _ _ = undefined -- We only anti-unify formulas that have the same predicate structure TODO
 
 \end{code}
 
@@ -288,7 +288,7 @@ In Haskell, we implement fixations as follows.
      arguments = [ t | (j, t) <- zip [0..] ts', i <= j, j <= i+k-1 ] -- Arguments of f that will become arguments of g
      in T (VS f') [ if j == i then T (VS g) (map insertInTerm arguments) else insertInTerm t | (j, t) <- zip [0..] ts', j `notElem` [i+1..i+k-1] ]
    insertInTerm (T (FS f') ts') = T (FS f') (map insertInTerm ts')
- applyInsertion _ _ = undefined -- Recursive cases handled by apply
+ applyInsertion _ _ = undefined -- Recursive cases handled by apply TODO
 
 \end{code}
 
@@ -299,18 +299,18 @@ In Haskell, we implement fixations as follows.
 
 We define permutations as follows in Haskell.
 
-TODO justify why we need the instances Show, Eq for function
+% TODO justify why we need the instances Show, Eq for function. (Max: do we still need it?)
 
-\begin{code}
- instance Show (a -> b) where
-   show _ = "function"
+% \begin{code}
+%  instance Show (a -> b) where
+%    show _ = "function"
 
- instance Eq (a -> b) where
-   (==) _ _ = True
+%  instance Eq (a -> b) where
+%    (==) _ _ = True
 
- newtype Permutation = P (VarSymb, VarSymb, Int -> Int) deriving (Eq, Show)
+%  newtype Permutation = P (VarSymb, VarSymb, Int -> Int) deriving (Eq, Show)
 
-\end{code}
+% \end{code}
 
  %-- Here it must hold that f assigns only indices smaller than length of the list to such indices, no checking whether f is bijective is done
 
@@ -334,7 +334,7 @@ The following function allows then to apply a permutation to a formula.
    permInTerm (P (v, v', f)) (T (VS w) ts) | v == w = T (VS v') (permute ts ts f) 
                                            | otherwise = T (VS w) ts
    permInTerm r (T (FS f) ts) = T (FS f) (map (permInTerm r) ts)
- applyPermutation _ _ = undefined -- Recursive cases handled by apply
+ applyPermutation _ _ = undefined -- Recursive cases handled by apply TODO
 
 \end{code}
 
@@ -446,29 +446,29 @@ notion of ``complexity of generalization'' discussed in
 \end{definition}
 
 
+The following functions compute the complexity of a single substitution, of a list of substitutions and of a generalisation.
+
 \begin{code}
  type Comp = Int
-
--- Complexity of one simple substitution
 
  cSimple :: Sub -> Comp
  cSimple (SR _) = 0
  cSimple (SF _) = 1
- cSimple (SI (AI (_, _, g, _))) = length (fst (symbAr(VS g))) + 1  ---- We look at the length of the arity of G (the variable we wish to insert)
+ cSimple (SI (AI (_, _, g, _))) = length (fst (symbAr(VS g))) + 1 
  cSimple (SP _) = 1
 
--- Complexity of a list of substitutions
  cList :: [Sub] -> Comp
  cList [] = 0
  cList xs = foldr ((+) . cSimple) 0 xs
 
-
--- test with: cList [SP $ P ("F", "G", fun), SP $ P ("W", "G", fun), SF $ F ("X", "sun"), SR $ R ("X", "Z"), SI $ AI ("F", "F", "W", 2)]
-
--- Complexity of a generalisation (taken as a triple of a term and two lists of substituations) we need to fix this to fit the definition from above
-
  cGen :: Gen -> Comp
  cGen (_, s, s') = cList s + cList s'
+
+\end{code}
+
+Finally, we have a function that computes the generalisation with least complexity given a list of generalisations.
+
+\begin{code}
 
  prefGen :: [Gen] -> Gen
  prefGen [x] = x
