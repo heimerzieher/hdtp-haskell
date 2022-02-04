@@ -1,4 +1,5 @@
-\ifx true false
+\ifx true false 
+% We put this to exclude the first part from the compilation of the pdf file 
 
 \begin{code}
 
@@ -122,6 +123,7 @@ casesLambda = [
 \end{code}
 
 \ifx true false
+% The rest won't be compiled for the pdf
 
 \begin{code}
   ]
