@@ -1,26 +1,17 @@
 name: report
 version: 0.1.0.0
-synopsis: My Haskell report project
+synopsis: An implementation of HDTP in Haskell
 description: See report.pdf
-maintainer: My Name <my.email@example.com>
+maintainer: M. Petrowitch, X. Ripoll, R. Tosswill
 category: Logic
 
 ghc-options: -Wall
 
 dependencies:
   - base >= 4.14 && < 5
-  - random
-  - QuickCheck
 
 library:
   source-dirs: lib
-
-executables:
-  myprogram:
-    main: Main.lhs
-    source-dirs: exec
-    dependencies:
-      - report
 
 tests:
   simpletests:
@@ -28,5 +19,4 @@ tests:
     source-dirs: test
     dependencies:
       - report
-      - QuickCheck
       - hspec

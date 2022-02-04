@@ -27,17 +27,11 @@ To our knowledge, there has been so far no implementation of HDTP in a functiona
 \tableofcontents
 
 
-
-\clearpage
-
-% We include one file for each section. The ones containing code should
-% be called something.lhs and also mentioned in the .cabal file.
-
 \section{Analogical Reasoning and HDTP}
 Analogical reasoning is a central aspect of human problem-solving skills
 \cite{gentner}, creativity \cite{Besold2015GeneralizeAB}, and concept
 formation \cite{hofstadter2013surfaces}, and as such, is a major focus of
-research in cognitive science. Traditionally, analogical reasoning is defined to be the process in which an agent will attempt to understand an unfamiliar domain of knowledge $T$ (the \textit{target} domain) by noticing its similarity to a more familiar domain $S$ (the \textit{source} domain). This similarity allows an agent to propose novel hypotheses about the target domain, supposing that s/he has discovered a useful similarity between source and target.
+research in cognitive science. Traditionally, analogical reasoning is defined to be the process in which an agent will attempt to understand an unfamiliar domain of knowledge $T$ (the \textit{target} domain) by noticing its similarity to a more familiar domain $S$ (the \textit{source} domain). This similarity allows an agent to propose novel hypotheses about the target domain, supposing that they have discovered a useful similarity between source and target.
 
 The HDTP framework as laid out in \cite{Schmidt-2014}, approaches analogical reasoning from a syntactic point of view, representing domains of knowledge as first-order theories, and analogies as formal correspondences between formulae of those theories. 
 
@@ -48,10 +42,8 @@ HDTP sees the process of analogical reasoning as consisting of three phases:
     \item \textit{Transfer}, in which the correspondence established in the mapping phase is used to generate new formulae in the target domain, to serve as hypotheses in further reasoning.
 \end{itemize} 
 
-These three phases will guide our discussion of the current Haskell implementation over the course of the next three sections: Section 2 will provide details about how we have implemented first order theories, which will also serve to cover the retrieval phase of HDTP. Sections 3 and 4 will focus on the implementation of restricted higher-order anti-unification, which is the formal process at the heart of the mapping phase of HDTP. Section 5 will lay out how we have implemented a procedure for analogical transfer. In Section 6, we will summarize the achievements of the project so far, as well as what remains to be completed in further work.
+These three phases will guide our discussion of the current Haskell implementation over the course of the next three sections: Section 2 will provide details about how we have implemented first order theories, which will also serve to cover the retrieval phase of HDTP. Sections 3 and 4 will focus on the implementation of restricted higher-order anti-unification, which is the formal process at the heart of the mapping phase of HDTP. Section 5 will lay out how we have implemented a procedure for analogical transfer. Section 6 is an overview of the implementation of tests. In Section 7, we will summarize the achievements of the project so far, as well as what remains to be completed in further work.
 % \input{Howto.tex}
-
-[bit about the benefits of implementation as a way to improve understanding]
 
 \input{lib/HDTP.lhs}
 

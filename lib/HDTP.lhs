@@ -1,17 +1,10 @@
-TODO kill all warnings -Wall
-TODO kill all lint notices
-
 \vspace{0.5cm}
 
-\begin{code}
- module HDTP where
- import Data.List ((\\), find, sortBy, minimumBy)
-\end{code}
 
 \section{First-Order Theories and Basic Types}
 
 Unlike other models of analogical reasoning (see e.g. \cite{Hofstadter1995TheCP}, \cite{Gentner1983StructureMappingAT}), but in line with broader trends in the cognitive science literature, HDTP represents an agent's knowledge of any given domain of knowledge as a finite, multi-sorted, first-order theory. In order to implement this in Haskell, we first need to define things from the ground up.  
-% \input{lib/Basics.lhs}
+
 Classically, a first-order language $\mathcal{L}$ is a set of formulae built out of predicates, logical symbols, and terms, which are themselves build out of non-logical symbols drawn from a signature. The particular formulation written below draws heavily from the formalization presented in \cite{Schwering2009SyntacticPO}:
 
 \begin{definition}[Signature]
@@ -25,6 +18,14 @@ Classically, a first-order language $\mathcal{L}$ is a set of formulae built out
     \end{itemize}
 \end{definition}
 
+In Haskell, we first define some types for function, predicate and variable symbols as well as sorts.
+
+\vspace{0.5cm}
+
+\begin{code}
+ module HDTP where
+ import Data.List ((\\), find, sortBy, minimumBy)
+\end{code}
 
 \begin{code}
  type FunSymb = String
@@ -33,8 +34,9 @@ Classically, a first-order language $\mathcal{L}$ is a set of formulae built out
  newtype Sort = S String deriving (Eq, Show)
 \end{code}
 
+Here \texttt{FunSymb} and \texttt{VarSymb} are both of type string. This is not the safest way to implement those types but we make sure that we only use them within other type defitions that avoid any ambiguities.
 
-Now if we 
+
 \begin{definition}[Terms]
     Let $V = \{v_1 : s, v_2 : s \dots \}$ be an infinite set of sorted variables, and $\Sigma$ a signature. We can define a term algebra $Term(\Sigma, V)$ recursively as the smallest set obeying the following conditions:
     \begin{enumerate}[label=(\arabic*)]
@@ -51,12 +53,19 @@ Now if we
     \end{enumerate}
 \end{definition}
 
-TODO Xavier explain how we manage arity and how we use it as a database
+As they are defined, the function and variable symbols have a specific arity, consisting of lists of sorts that they take as arguments, together with the sort they return (just the latter in the case of constants).
+Unfortunately, it is impossible to use the Haskell type system to represent such sorts as types if we want to leave the sorts open to be defined by the final user of our implementation.
+This means that we need a layer on top of each formula that allows us to check the arity of every object, including predicates and functions.
+
+Although we considered various options for this, none of them are failproof.
+One of our initial designs consisted of carrying the signature of each function along with its symbol, but it turned out to be cumbersome and limited in providing a universal way to check the sorts.
+We ended up opting for global ``database'' functions (\texttt{symbAr} for function and variable symbols, and \texttt{predAr} for predicates) that let us define a global store.
+Global variables are usually considered bad practice in a functional context, but they are a nice compromise between ease of use and technical complexity when used appropriately.
 
 \vspace{0.5cm}
 
 \begin{code}
- -- newtype Term Sg [[s], [f], [p], af, ap] [v] = v | f [Term] deriving (Eq,Ord,Show) TODO: Remove?
+ -- newtype Term Sg [[s], [f], [p], af, ap] [v] = v | f [Term] deriving (Eq,Ord,Show) 
  data TSymb = VS VarSymb | FS FunSymb deriving (Eq, Show)
  data Term = T TSymb [Term] deriving (Eq, Show) -- Find a way to restrict this to respect sorts
  data Form = FT PredSymb [Term] | Not Form | Disj Form Form | Forall VarSymb Form deriving (Eq, Show)
@@ -71,8 +80,6 @@ TODO Xavier explain how we manage arity and how we use it as a database
  predAr = undefined
 
 \end{code}
-
-In Haskell, TODO
 
 Finally, with all of these preliminaries in place, we can define the basic unit of knowledge in HDTP, the domain:
 
@@ -131,8 +138,6 @@ What's needed to get around this is some notion of minimality:
 
 In this way, least general generalizations constitute limits in the category of first-order substitutions. As proven in \cite{Plotkin70}, this category has all finite limits: for any finite set of first-order terms, one can always find a lgg.
 
-% TODO: page number in citation
-
 In the original 1970 paper, this result was shown constructively with an imperative algorithm. Helpfully for us, a functional algorithm to do the same is detailed in \cite[3]{Tabareau2013AntiUnificationWT}. It runs as follows.
 
 $
@@ -145,8 +150,7 @@ $
 \end{aligned}
 $
 
-
-To implement this algorithm in Haskell, we first implement a helper function which takes a list of variable symbols and gives us a new variable name that is not yet in that list. Exploiting Haskell's lazyness this function can create new variable names for a given list of any length. We first add $X, Y, Z, W$ to the list of possible variable symbols as those are our preferred variable names. 
+To implement this algorithm in Haskell, we first build a helper function which takes a list of variable symbols and gives us a new variable name that is not yet in that list. Exploiting Haskell's lazyness this function can create new variable names for a given list of any length. We first add $X, Y, Z, W$ to the infinite list of possible variable symbols as those are our preferred variable names. 
 
 \vspace{0.5cm}
 
@@ -203,7 +207,7 @@ We have adapted it to pairs of general formulas, provided that they have the sam
    (outForm, subs) = lambda phi psi theta
    (outForm', subs') = lambda phi' psi' theta
  lambda (Forall vs phi) (Forall _ psi) theta = (Forall vs outForm, subs) where (outForm, subs) = lambda phi psi theta
- lambda _ _ _ = undefined -- We only anti-unify formulas that have the same predicate structure TODO
+ lambda _ _ _ = undefined -- We only anti-unify formulas that have the same predicate structure
 
 \end{code}
 
@@ -213,10 +217,12 @@ We have adapted it to pairs of general formulas, provided that they have the sam
 While first-order anti-unification is useful for many purposes, it isn't strong enough to capture similarities which humans regularly can when forming analogies. For example, consider terms $s:= 2+3$ and $t:= 2\times 3$. Using only first-order substitutions, the lgg of $\{s,t\}$ is simply $g = \langle x, x\mapsto 2+3, x\mapsto 2 \times 3\rangle$. Because first-order substitutions cannot instantiate function symbols, the obvious generalization is not found.
 
 \subsection{Basic Substitutions}
-% \input{test/simpletests.lhs}
+
 To better capture these kinds of situations, HDTP replaces the simple form of first-order substitutions with four so-called ``basic substitutions'', functions $bs : Term(\Sigma, V) \to Term(\Sigma, V)$ which allow for some second-order properties. 
 
-Following what appears to be the authors' intent, we can generalize these basic substitutions to apply to formulae. Our implementation of these substitutions ...
+Following what appears to be the authors' intent, we can generalize these basic substitutions to apply to formulae. Our implementation of these substitutions models the information that they carry with themselves, rather than their action as functions.
+We then provide a function \texttt{apply} that actually executes the action they represent.
+Having the subsitutions as data structures instead of Haskell functions allows for destructuring and comparing them.
 
 \vspace{0.5cm}
 
@@ -235,6 +241,9 @@ Following what appears to be the authors' intent, we can generalize these basic 
  apply' :: [Sub] -> Form -> Form
  apply' subs phi = foldr apply phi subs
 \end{code}
+
+In Haskell, we implement renamings, fixations, argument insertions and permutations as follows.
+
 
 \begin{definition}[Renaming]
     A \textit{renaming} $\rho^F_{F'}$ replaces a variable $F : s_1 \times \dots \times s_n \to s \in V_n$ with a variable $F' : s_1 \times \dots \times s_n \to s \in V_n$ $$F(t_1 : s_1, \dots t_n : s_n) : s \xrightarrow{\rho^F_{F'}}F'(t_1 : s_1, \dots t_n : s_n) : s$$
@@ -265,10 +274,8 @@ Following what appears to be the authors' intent, we can generalize these basic 
 \end{code}
 
 \begin{definition}[Fixation]
-    A \textit{fixation} $\phi^F_f$ replaces a variable $F : s_1 \times \dots \times s_n \to s \in V_n$ with a function symbol $f : s_1 \times \dots \times s_n \to s \in Func_\Sigma$ $$F(t_1 : s_1, \dots t_n : s_n) : s \xrightarrow{\phi^F_f}f(t_1 : s_1, \dots t_n : s_n) : s$$
+    A \textit{fixation} $\fakephi^F_f$ replaces a variable $F : s_1 \times \dots \times s_n \to s \in V_n$ with a function symbol $f : s_1 \times \dots \times s_n \to s \in Func_\Sigma$ $$F(t_1 : s_1, \dots t_n : s_n) : s \xrightarrow{\fakephi^F_f}f(t_1 : s_1, \dots t_n : s_n) : s$$
 \end{definition}
-
-In Haskell, we implement fixations as follows.
 
 \vspace{0.5cm}
 
@@ -288,7 +295,7 @@ In Haskell, we implement fixations as follows.
 \begin{definition}[Argument Insertion]
     An \textit{argument insertion} $\iota^{F,F'}_{G,i}$, with $0 \le o \le n$, $F : s_1 \times \dots \times s_n \to s \in V_n$, $G : s_i \times \dots \times s_{i+k-1} \to s_g \in V_k$ with $k \le n - i$ and $F' : s_1 \times \dots \times s_{i-1} \times s_g \times s_{i+k} \times \dots \times s_n \to s \in V_{n-k+1}$ is defined as: 
     \begin{align*}
-        &F(t_1 : s_1, \dots t_n : s_n) : s \xrightarrow{\phi^F_f}\\
+        &F(t_1 : s_1, \dots t_n : s_n) : s \xrightarrow{\iota^{F,F'}_{G,i}}\\
         F'(t_1 : s_1,  \dots t_{i-1} : s_{i-1}, & G (t_i : s_i, \dots, t_{i+k-1} : s_{i+k-1}) : s_g, t_{i+k} : s_{i+k}, \dots, t_n : s_n) :s
     \end{align*}
 \end{definition}
@@ -306,7 +313,7 @@ In Haskell, we implement fixations as follows.
      arguments = [ t | (j, t) <- zip [0..] ts', i <= j, j <= i+k-1 ] -- Arguments of f that will become arguments of g
      in T (VS f') [ if j == i then T (VS g) (map insertInTerm arguments) else insertInTerm t | (j, t) <- zip [0..] ts', j `notElem` [i+1..i+k-1] ]
    insertInTerm (T (FS f'') ts') = T (FS f'') (map insertInTerm ts')
- applyInsertion _ _ = undefined -- Recursive cases handled by apply TODO
+ applyInsertion _ _ = undefined -- Recursive cases handled by apply 
 
 \end{code}
 
@@ -315,11 +322,9 @@ In Haskell, we implement fixations as follows.
     $$F(t_1 : s_1, \dots t_n : s_n) : s \xrightarrow{\pi^{F,F'}_{\alpha}} F'(t_{\alpha(1)} : s_{\alpha(1)}, \dots t_{\alpha(n)} : s_{\alpha(n)}) : s$$
 \end{definition}
 
-We define permutations as follows in Haskell.
 
 \vspace{0.5cm}
 
-% TODO justify why we need the instances Show, Eq for function. (Max: do we still need it?)
 
 \begin{code}
 
@@ -329,7 +334,11 @@ We define permutations as follows in Haskell.
 
  %-- Here it must hold that f assigns only indices smaller than length of the list to such indices, no checking whether f is bijective is done
 
-The following recursive helper function permutes a list, given a function from indices of that list to indices of that list. Because of the recursive charcater of this helper function the list needs to be given twice as an argument.
+The following recursive helper function permutes a list, given a function from indices of that list to indices of that list, provided as a list of tuples.
+Because of the recursive charcater of this helper function the list needs to be given twice as an argument.
+
+We leave it up to the user to define semantically correct subsitutions.
+Lifting this reponsibility to the type level (and thus compile time) is unfortunately out of scope due to the lean design of our types.
 
 \vspace{0.5cm}
 
@@ -358,7 +367,7 @@ The following function allows then to apply a permutation to a formula.
    permInTerm (P (v, v', f)) (T (VS w) ts') | v == w = T (VS v') (permute ts' ts' f) 
                                            | otherwise = T (VS w) ts'
    permInTerm r (T (FS f) ts') = T (FS f) (map (permInTerm r) ts')
- applyPermutation _ _ = undefined -- Recursive cases handled by apply TODO
+ applyPermutation _ _ = undefined -- Recursive cases handled by apply
 
 \end{code}
 
@@ -520,10 +529,15 @@ This is precisely the tactic we use to construct the basic framework for forming
     Given an alignment $[\langle \alpha_1, \beta_1\rangle, \dots, \langle \alpha_n, \beta_n\rangle ]$, a \textit{domain generalization} is a set of ntggs $ \mathcal{D}_g = [ g_1, \dots g_n ]$, where for $1 \le i \le n$, $g_i = \langle a_i, \sigma_i, \tau_i\rangle$ such that $\alpha_i \xleftarrow{\sigma_i} a_i \xrightarrow{\tau_i} \beta_i$.
 \end{definition}
 
+What follows is the core of our implementation: an algorithm capable of generating such alignments.
+Due to the differences between theory and implementation, our function not only returns the align formulae, but also the generalizations used to produce them.
+The algorithm calculates all the NTGGs from all possible pairs between a source domain with $n$ different formulae, and a target domain with $m$ formulae.
+In order to maintain the amount of generated formulae manageable, we (somewhat arbitrarily) pick the $m$ pairs with the lowest complexity.
+This upper bound of $m$ is our interpretation of the ``not too general'' part of ntggs.
+
+\vspace{0.5cm}
 
 \begin{code}
-
- -- Calculate all the NTGGs from all possible pairs between the source domain (of size n) and the target domain (of size m), and then pick the m pairs with the lowest complexity
  -- output: [(0,1,2,3,4)] such that 2 <-1- 0 -3-> 4
  align :: Domain -> Domain -> [(Form, [Sub], Form, [Sub], Form)]
  align d d' = take (length d') $ sortBy (\p p' -> complexity p `compare` complexity p') [ result phi psi | phi <- d, psi <- d' ] where
@@ -537,6 +551,10 @@ This is precisely the tactic we use to construct the basic framework for forming
    alignToTransfer (antiUnifier, subPhi, _, subPsi, _) = (antiUnifier, subPhi, subPsi)
 
 \end{code}
+
+One of the artifacts of combining the algorithm of \cite[3]{Tabareau2013AntiUnificationWT} in conjunction with the (higher-order) theoretical frame from \cite{Schmidt-2014} is that we have to adapt the output of \texttt{align} to use the four basic substitutions.
+On paper it is easy to imagine how one would approach this.
+The Haskell implementation is a bit convoluted, but it tries to obtain the simplest chain of basic substitutions that, applied one after the other, result in the conceptual substitution given by \cite[3]{Tabareau2013AntiUnificationWT}.
 
 \vspace{0.5cm}
 
@@ -583,12 +601,12 @@ This is precisely the tactic we use to construct the basic framework for forming
 
 \section{Analogical Transfer}
 As stated previously, the ultimate purpose of generalizations is to allow an agent to form analogies between two domains of knowledge, and then to leverage her knowledge of the source domain to infer new formulae in the target domain. The present section will detail how we model this process in our Haskell implementation of HDTP.
-% \input{Profiling.tex}
 
 For the most part, \cite{Schmidt-2014} provides few details about analogical transfer in HDTP, but drawing on sources such as \cite{Schwering2009SyntacticPO}, we can infer that analogical transfer is meant to be the composition of two chains of substitutions: first, for any given formula in the source domain $\alpha_i \in \mathcal{D}_\alpha$, apply $\sigma_i^{-1} : \alpha_i \to a_i$ to ``send'' $\alpha_i$ to its specific enough anti-unifier in the domain generalization $a_i \in \mathcal{D}_g$.
 Second, apply any number of the chains of substitutions $\{\tau_1, \dots \tau_n\}$ in $\mathcal{D}_g$ in order to produce a new formula $\beta \in \mathcal{D}_\beta$ in the target domain.
 
-In our implementation of analogical transfer, we have chosen to freely generate all sentences about from the TODO
+Our implementation of \texttt{transfer} simply applies all the generalizations obtained from the alignment to all the formulae from the source domain.
+As we have already cut down on the amount of generalizations in the alignment algorithm, we are safe to return all these obtained formulae as the result of this automated analogical transfer.
 
 \vspace{0.5cm}
 
@@ -596,17 +614,13 @@ In our implementation of analogical transfer, we have chosen to freely generate 
 
  targetSubsOf :: [Gen] -> [[Sub]] -- collects all the ``right projections'', the substitutions to the target domain
  targetSubsOf [] = []
- targetSubsOf gens = map third gens where
-   third :: (a, b, c) -> c
-   third (_,_,x) = x
+ targetSubsOf gens = map (\(_, _, x) -> x) gens
 
  sourceSubsOf :: [Gen] -> [[Sub]] -- collects all the ``left projections'', the substitutions to the source domain
  sourceSubsOf [] = []
- sourceSubsOf gens = map second gens where
-   second :: (a, b, c) -> b
-   second (_,x,_) = x
+ sourceSubsOf gens = map (\(_, x, _) -> x) gens
 
- --          generalized domain -> analogical pairs (s,t'), where t' is the expanded target domain 
+ -- generalized domain -> analogical pairs (s,t'), where t' is the expanded target domain 
  transfer :: [Gen] -> [(Form, Form)]
  transfer gens = [ (apply' s g, apply' t' g) | (g, s, _) <- gens, (_, _, t') <- gens ]
 

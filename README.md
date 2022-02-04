@@ -1,8 +1,18 @@
 # Heuristic-Driven Theory Projection in Haskell
 
-See report.pdf for documentation.
+A Haskell library for Heuristic-Driven Theory Projection.
 
-Abstract: 
+### How to use
+
+To compile everything: ``` stack build ```
+
+To work with the library in ghci: ``` stack ghci ```
+
+To run the tests: ```stack clean && stack test --coverage```
+
+See report.pdf for explanation of the code.
+
+### Abstract 
 
 In (Schmidt et al. 2014), the authors provide an overview of Heuristic-Driven Theory Projection (HDTP), a logic-based computational model of analogical reasoning. In this framework, an agent's knowledge of a familiar domain S is represented as a first-order theory, which can be projected into another, less familiar domain T, by constructing a more general domain G, using anti-unification of formulas (Plotkin 1970). 
 

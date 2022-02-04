@@ -22,7 +22,7 @@ specs = do
   describe "lambda algorithm for lgg" $ for_ casesLambda testLambda
   describe "lambdaForTerms algorithm for lgg" $ for_ casesLambdaT testLambdaT
   describe "align" $ for_ casesAlign testAlign
-  describe "testTransfer" $ for_ casesTransfer testTransfer
+  describe "transfer" $ for_ casesTransfer testTransfer
     where 
       testSubs CaseSubs{..} = it descriptionSubs $ uncurry apply inputSubs `shouldBe` expectedSubs
       testLambda CaseLambda{..} = it descriptionLambda $ (\(a, b, c) -> lambda a b c) inputLambda `shouldBe` expectedLambda
@@ -91,7 +91,7 @@ casesLambda = [
   , inputLambda       = (FT (PS "dist") [ T (FS "planet") [], T (FS "sun") [], T (VS "T") [] ], FT (PS "dist") [ T (FS "electron") [], T (FS "nucleus") [], T (VS "T") [] ], [])
   , expectedLambda    = (FT (PS "dist") [ T (VS "X") [], T (VS "Y") [], T (VS "T") [] ], [("Y",T (FS "sun") [],T (FS "nucleus") []),("X",T (FS "planet") [],T (FS "electron") [])])
   },
-  
+
   CaseLambda { descriptionLambda = "f(g(a, b, c), d), f(d, h (a)) -> f(X, Y)"
   , inputLambda       = (FT (PS "f") [T (FS "g") [T (FS "a") [], T (FS "b") [], T (FS "c") []], T (FS "d") []] , FT (PS "f") [T (FS "d") [], T (FS "h") [T (FS "a") []]], [])
   , expectedLambda    = (FT (PS "f") [T (VS "X") [], T (VS "Y") []], [("Y",T (FS "d") [],T (FS "h") [T (FS "a") []]),("X",T (FS "g") [T (FS "a") [],T (FS "b") [],T (FS "c") []],T (FS "d") [])])
@@ -147,7 +147,7 @@ data CaseAlign = CaseAlign {
 casesAlign :: [CaseAlign]
 casesAlign = [
   CaseAlign {
-    descriptionAlign = "TODO",
+    descriptionAlign = "align mass(sun) > mass(planet), mass(nucleus) > mass(electron",
     inputAlign = (
       [FT (PS "geq") [ T (FS "mass") [T (FS "sun") []], T (FS "mass") [T (FS "planet") []]]],
       [FT (PS "geq") [T (FS "mass") [T (FS "nucleus") [] ], T (FS "mass") [T (FS "electron") []]]]
@@ -183,7 +183,7 @@ data CaseTransfer = CaseTransfer {
 casesTransfer :: [CaseTransfer]
 casesTransfer = [
   CaseTransfer {
-    descriptionTransfer = "TODO",
+    descriptionTransfer = "transfer mass(sun) > mass(planet), mass(nucleus) > mass(electron)",
     inputTransfer = (
       [FT (PS "geq") [ T (FS "mass") [T (FS "sun") []], T (FS "mass") [T (FS "planet") []]]],
       [FT (PS "geq") [T (FS "mass") [T (FS "nucleus") [] ], T (FS "mass") [T (FS "electron") []]]]
