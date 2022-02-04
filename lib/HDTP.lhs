@@ -10,7 +10,7 @@ TODO kill all lint notices
 
 Unlike other models of analogical reasoning (see e.g. \cite{Hofstadter1995TheCP}, \cite{Gentner1983StructureMappingAT}), but in line with broader trends in the cognitive science literature, HDTP represents an agent's knowledge of any given domain of knowledge as a finite, multi-sorted, first-order theory. In order to implement this in Haskell, we first need to define things from the ground up.  
 % \input{lib/Basics.lhs}
-Classically, a first-order language $\mathcal{L}$ is a set of formulae built out of... The particular formulation written below draws heavily from the formalization presented in \cite{Schwering2009SyntacticPO}:
+Classically, a first-order language $\mathcal{L}$ is a set of formulae built out of predicates, logical symbols, and terms, which are themselves build out of non-logical symbols drawn from a signature. The particular formulation written below draws heavily from the formalization presented in \cite{Schwering2009SyntacticPO}:
 
 \begin{definition}[Signature]
     We define a signature to be a 5-tuple \\$\Sigma = (Sort_\Sigma, Func_\Sigma, Pred_\Sigma, arP, arF)$, where 
@@ -88,15 +88,30 @@ The proper identification of common structure between seemingly disparate domain
 
 Originally proposed in \cite{Plotkin70}, generalization (also known as anti-unification) is just such a notion: an anti-unifier of any two terms $s,t$ is a term containing only their shared syntactic structure: the distinguishing details of $s$ and $t$ have been abstracted away by replacing the constants with variables. More formally:
 
+
+\begin{definition}[First-order Substitution on Variables]
+    Given a term algebra $Term(\Sigma, V)$, a \textit{first-order substitution} is a partial function $\sigma : V \to Term(\Sigma, V)$ mapping variables
+    to terms, formally represented by $\sigma = \{x_1 \mapsto t_1, \dots, x_n \mapsto t_n\}$ (provided sorts match). An application of a substitution
+    $\sigma$ to a term is defined by induction on the structure of a term as below:
+    \begin{itemize}
+    \item \begin{equation}
+    apply(x, \sigma) =
+    \begin{cases*}
+      t & if $x \mapsto t \in \sigma$ \\
+      x & otherwise
+    \end{cases*}
+  \end{equation}
+  \item $apply(f(t_1, \dots, t_n), \sigma) = f(apply(t_1, \sigma), \dots, apply(t_n, \sigma))$
+  \end{itemize}
+\end{definition}
+
 \begin{definition}[First-order Generalization]
     Let $s, t$ be first-order terms (resp. formulae). A \textit{generalization} is a triple $g = \langle a, \sigma, \tau \rangle$ with term (resp. formula) $a$ and substitutions $\sigma, \tau$ such that $s \xleftarrow{\sigma} a \xrightarrow{\tau} t$.
     We say that $a$ is an \textit{anti-unifier} of $\{s,t\}$.
 \end{definition}
 
 
-\begin{definition}[First-order Substitution on Variables]
-    
-\end{definition}
+
 
 
 By themselves, generalizations aren't necessarily helpful. A generalization that removes too much detail leaves us with a term devoid of any real content.
@@ -159,7 +174,7 @@ Here we use the helper function\texttt{sameTop} that takes two lists of terms an
 
 \end{code}
 
-The original algorithm from (TODO quote Tabareau) is designed for generalizing terms, not formulas.
+The original algorithm from \cite{Tabareau2013AntiUnificationWT} is designed for generalizing terms, not formulas.
 We have adapted it to pairs of general formulas, provided that they have the same predicate structure.
 
 \begin{code}
@@ -466,16 +481,14 @@ notion of ``complexity of generalization'' discussed in
 
 %  -- output is (myterm, mySubs2, mySubs2)
 
-The intuition for this measure, as described in the original work, is that human subjects appear to have a bias towards substitutions which 
+The intuition for this measure, as described in the original work, is that human subjects appear to have more difficulty processing the final three substitutions compared to the first. 
 
 
-With a metric in place for comparing the desirability of different ntggs, we can select the ``best'' alignment as the one whose generalizations are least costly:
+In the original \cite{Schmidt-2014}, the complexity of a generalization was used to find a ``Preferred Generalization'' among the ``multiple lggs'' constructed for any pair of formulae. 
+As previously discussed, this notion of ``multiple lggs'' wasn't sufficiently well-defined, and so was replaced with our notion of ``not too general generalization''. 
+We can now use the complexity of an ntgg as a metric to compare the desirability of different alignments, as we can select the ``best'' alignment as the one whose generalizations are least costly.
 
-
-
-This notion is different to the definition of ``Preferred Generalization'' given in \cite{Schmidt-2014}, as it's actually well-defined, you fucks!
-
-Now, we finally have all the pieces in place to construct the basic framework for forming an analogy between two domains, \cite{Schmidt-2014}'s \textit{domain generalization}:
+This is precisely the tactic we use to construct the basic framework for forming an analogy between two domains, \cite{Schmidt-2014}'s \textit{domain generalization}:
 
 \begin{definition}[Domain Generalization]
     Given an alignment $[\langle \alpha_1, \beta_1\rangle, \dots, \langle \alpha_n, \beta_n\rangle ]$, a \textit{domain generalization} is a set of ntggs $ \mathcal{D}_g = [ g_1, \dots g_n ]$, where for $1 \le i \le n$, $g_i = \langle a_i, \sigma_i, \tau_i\rangle$ such that $\alpha_i \xleftarrow{\sigma_i} a_i \xrightarrow{\tau_i} \beta_i$.
