@@ -109,6 +109,8 @@ casesLambda = [
 
 \fi
 
+% We need to break the block here in order to display in the pdf only the following lines 
+
 \begin{code}
 
   CaseLambda {
