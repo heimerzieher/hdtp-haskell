@@ -39,21 +39,16 @@ data CaseSubs = CaseSubs {
   , expectedSubs    :: Form
 }
 
-fun :: Int -> Int
-fun 0 = 1
-fun 1 = 2
-fun 2 = 0
-
 casesSubs :: [CaseSubs]
 casesSubs = [
   CaseSubs {
       descriptionSubs = "Permutation dist(Y,X,T) > 0"
-    , inputSubs       = (SP $ P ("F", "G", fun), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
+    , inputSubs       = (SP $ P ("F", "G", [(0, 1), (1, 2), (2, 0)]), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
     , expectedSubs    = Forall "T" (FT (PS "geq") [T (VS "G") [T (VS "X") [],T (VS "T") [],T (VS "Y") []]])
     }
   , CaseSubs {
       descriptionSubs = "Permutation dist(Y,X,T) > 0"
-    , inputSubs       = (SP $ P ("W", "G", fun), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
+    , inputSubs       = (SP $ P ("W", "G", [(0, 1), (1, 2), (2, 0)]), Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [], T (VS "X") [], T (VS "T") [] ]]))
     , expectedSubs    = Forall "T" (FT (PS "geq") [T (VS "F") [T (VS "Y") [],T (VS "X") [],T (VS "T") []]])
     }
   , CaseSubs {

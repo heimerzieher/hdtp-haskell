@@ -3,7 +3,7 @@ TODO kill all lint notices
 
 \begin{code}
  module HDTP where
- import Data.List ((\\), find, sortBy)
+ import Data.List ((\\), find, sortBy, minimumBy)
 \end{code}
 
 \section{First-Order Theories and Basic Types}
@@ -160,7 +160,7 @@ The function \texttt{lambdaForTerms} is an implementation of the lgg algorithm f
    termSubsList = sameTop ts us theta
  lambdaForTerms t u theta = case find (\(_, t', u') -> t == t' && u == u') theta of
    Just (x, _, _) -> (T (VS x) [], theta)
-   Nothing -> (T (VS x) [], (x, t, u):theta) where x = newVariable (map (\(x, _, _) -> x) theta)
+   Nothing -> (T (VS x) [], (x, t, u):theta) where x = newVariable (map (\(vs, _, _) -> vs) theta)
 
 \end{code}
 
@@ -168,9 +168,10 @@ Here we use the helper function \texttt{sameTop} that takes two lists of terms $
 
 \begin{code}
  sameTop :: [Term] -> [Term] -> [TermGen] -> [(Term, [TermGen])]
- sameTop [] [] theta = []
+ sameTop [] [] _ = []
  sameTop (u:us) (t:ts) theta = lambdaOfTerms : sameTop us ts (snd lambdaOfTerms) where
                                     lambdaOfTerms = lambdaForTerms u t theta
+ sameTop _ _ _ = undefined -- sameTop is only applied to two equal predicates, hence same number of arguments
 
 \end{code}
 
@@ -287,7 +288,7 @@ In Haskell, we implement fixations as follows.
      k = length $ fst $ symbAr $ VS g -- Amount of arguments that g takes
      arguments = [ t | (j, t) <- zip [0..] ts', i <= j, j <= i+k-1 ] -- Arguments of f that will become arguments of g
      in T (VS f') [ if j == i then T (VS g) (map insertInTerm arguments) else insertInTerm t | (j, t) <- zip [0..] ts', j `notElem` [i+1..i+k-1] ]
-   insertInTerm (T (FS f') ts') = T (FS f') (map insertInTerm ts')
+   insertInTerm (T (FS f'') ts') = T (FS f'') (map insertInTerm ts')
  applyInsertion _ _ = undefined -- Recursive cases handled by apply TODO
 
 \end{code}
@@ -301,26 +302,26 @@ We define permutations as follows in Haskell.
 
 % TODO justify why we need the instances Show, Eq for function. (Max: do we still need it?)
 
-% \begin{code}
-%  instance Show (a -> b) where
-%    show _ = "function"
+\begin{code}
 
-%  instance Eq (a -> b) where
-%    (==) _ _ = True
+ newtype Permutation = P (VarSymb, VarSymb, [(Int, Int)]) deriving (Eq, Show)
 
-%  newtype Permutation = P (VarSymb, VarSymb, Int -> Int) deriving (Eq, Show)
-
-% \end{code}
+\end{code}
 
  %-- Here it must hold that f assigns only indices smaller than length of the list to such indices, no checking whether f is bijective is done
 
 The following recursive helper function permutes a list, given a function from indices of that list to indices of that list. Because of the recursive charcater of this helper function the list needs to be given twice as an argument.
 
 \begin{code}
- 
- permute :: [a] -> [a] -> (Int -> Int) -> [a]
- permute [] l f = []
- permute (x:xs) l f = l!!f (length l - (length xs + 1)) : permute xs l f
+
+ unsafeLookup :: Eq a => a -> [(a, b)] -> b
+ unsafeLookup key dict = case lookup key dict of
+   Just value -> value
+   Nothing -> error "Key not in dictionary"
+
+ permute :: [a] -> [a] -> [(Int, Int)] -> [a]
+ permute [] _ _ = []
+ permute (_:xs) l f = l!!unsafeLookup (length l - (length xs + 1)) f : permute xs l f
 
 \end{code}
 
@@ -331,9 +332,9 @@ The following function allows then to apply a permutation to a formula.
  applyPermutation :: Permutation -> Form -> Form
  applyPermutation p (FT pr ts) = FT pr (map (permInTerm p) ts) where
    permInTerm :: Permutation -> Term -> Term
-   permInTerm (P (v, v', f)) (T (VS w) ts) | v == w = T (VS v') (permute ts ts f) 
-                                           | otherwise = T (VS w) ts
-   permInTerm r (T (FS f) ts) = T (FS f) (map (permInTerm r) ts)
+   permInTerm (P (v, v', f)) (T (VS w) ts') | v == w = T (VS v') (permute ts' ts' f) 
+                                           | otherwise = T (VS w) ts'
+   permInTerm r (T (FS f) ts') = T (FS f) (map (permInTerm r) ts')
  applyPermutation _ _ = undefined -- Recursive cases handled by apply TODO
 
 \end{code}
@@ -471,9 +472,7 @@ Finally, we have a function that computes the generalisation with least complexi
 \begin{code}
 
  prefGen :: [Gen] -> Gen
- prefGen [x] = x
- prefGen (x:xs) | cGen x <= cGen (prefGen xs) = x
-                | otherwise = prefGen xs
+ prefGen = minimumBy (\gen gen' -> cGen gen `compare` cGen gen')
 
 \end{code}
 
@@ -540,14 +539,16 @@ This is precisely the tactic we use to construct the basic framework for forming
    -- Third argument: t
    -- Result: the (chain of) substitutions that result in x -> t inside of context
    aux :: Form -> VarSymb -> Term -> [Sub]
-   aux phi vs (T (FS fs) ts) = SF (F (newVar, fs)) : termToFormGenRec (newVar:varsInForm phi) vs (T (VS newVar) ts) where
+   aux phi vs' (T (FS fs) ts) = SF (F (newVar, fs)) : termToFormGenRec (newVar:varsInForm phi) vs' (T (VS newVar) ts) where
      newVar = newVariable (varsInForm phi)
+   aux _ _ _ = undefined -- We only apply aux to function symbol terms
 
  termToFormGenRec :: [VarSymb] -> VarSymb -> Term -> [Sub]
  termToFormGenRec vars vs (T (VS vs') (T (FS fs) _:ts)) = SF (F (newVar, fs)) : SI (AI (newVar', vs', newVar, 0)) : termToFormGenRec (newVar':newVar:vars) vs (T (VS vs') ts) where
    newVar = newVariable vars
    newVar' = newVariable (newVar:vars)
  termToFormGenRec _ vs (T (VS vs') []) = [SR (R (vs, vs'))]
+ termToFormGenRec _ _ _ = undefined -- Conversely, we only apply termToFormGenRec to variable symbol terms
 
 \end{code}
 
