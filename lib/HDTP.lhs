@@ -98,13 +98,13 @@ Originally proposed in \cite{Plotkin70}, generalization (also known as anti-unif
     to terms, formally represented by $\sigma = \{x_1 \mapsto t_1, \dots, x_n \mapsto t_n\}$ (provided sorts match). An application of a substitution
     $\sigma$ to a term is defined by induction on the structure of a term as below:
     \begin{itemize}
-    \item \begin{equation}
+    \item \begin{equation*}
     apply(x, \sigma) =
     \begin{cases*}
       t & if $x \mapsto t \in \sigma$ \\
       x & otherwise
     \end{cases*}
-  \end{equation}
+  \end{equation*}
   \item $apply(f(t_1, \dots, t_n), \sigma) = f(apply(t_1, \sigma), \dots, apply(t_n, \sigma))$
   \end{itemize}
 \end{definition}
@@ -450,16 +450,16 @@ notion of ``complexity of generalization'' discussed in
 
 \begin{definition}[Complexity of Substitutions]
     We define the complexity of a basic substitution $bs$ as:
-    \begin{equation}
+    \begin{equation*}
     \mathcal{C}(bs) =
     \begin{cases*}
-      0 & \text{if} bs \text{is a renaming} \\
-      1 & \text{if} bs \text{is a fixation} \\
-      k+1 & \text{if} bs \text{is an argument insertion, and}\\
-       \quad \text{the inserted argument is a variable of arity k} \\
-      1 & \text{if} bs \text{is a permutation} \\
+      0 & \text{if} $bs$ \text{is a renaming} \\
+      1 & \text{if} $bs$ \text{is a fixation} \\
+      k+1 & \text{if} $bs$ \text{is an argument insertion, and}\\
+          &\quad \text{the inserted argument is a variable of arity} $k$ \\
+      1 & \text{if} $bs$ \text{is a permutation} \\
     \end{cases*}
-  \end{equation}
+  \end{equation*}
   
   The complexity of a composition of basic substitutions is simply the sum of each basic substitution composed:
   $$\mathcal{C}(bs_1 \circ \dots \circ bs_n) = \displaystyle \sum_{i= 1}^n \mathcal{C}(bs_i) $$

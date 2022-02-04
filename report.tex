@@ -58,12 +58,22 @@ These three phases will guide our discussion of the current Haskell implementati
 \section{Testing the Algorithm}
 
 Based on the examples in \cite{Schmidt-2014} we implemented test cases with \texttt{Hspec} for the basic substituations and the ntgg, alignment and transfer algorithms. The tests can be run with \verb|stack clean && stack test --coverage|. The code block below is an example for a test case of our ntgg algorithm.
-
-\vspace{0.5cm}
-
+\vspace{2mm}
 \input{test/Tests.lhs}
 
 \section{Conclusion and Future Work}
+
+We began this project because of our appreciation for what the authors of HDTP had been able to accomplish. We had hoped that by trying to translate some of their ideas into a functional programming context, we could learn more about HDTP in specific, and analogical reasoning more generally.
+
+Like logic as a practice, the process of implementing an idea in code can be an excellent way to diagnose mistaken assumptions, flaws in reasoning, and fuzzy, ill-defined concepts. Our experience in trying to implement HDTP in Haskell was a perfect example of this. While the source material is an interesting analysis of analogical reasoning, the authors' attempt to formalize this often resulted in more confusion than clarity. As we've learned, translating something into formal language does not in and of itself guarantee the benefits of formal reasoning we described above.
+
+Over the course of the project, we have had to fill in a number of conceptual holes which were not evident in the original papers. Conflations between terms and formulae, vagueness in the use of specific technical terms (like least general generalization), and a lack of proper specfication for some of the algorithms alluded to made the project more difficult than we expected. We did our best to remain true to the original work, while still settling issues where they arose.
+
+We of course were limited as well in our implementation. For one, we have only tested our algorithm on examples from the original work, which may not present a full picture of either the successes or limitations of this model. In addition, time constraints prevented us from exploring more concrete design choices, such as in the definition of not too general generalizations, which remains vague.
+
+In the end, with a bit of flexibility, we were happy to have created a Haskell program to see a system like HDTP in action. As well, we are proud to be pioneers in the application of Haskell to analogical reasoning. It is our hope that a program like ours might only be the beginning of more work on bringing HDTP into the broader computational and logical community.
+
+
 % \input{Conclusion.tex}
 
 
