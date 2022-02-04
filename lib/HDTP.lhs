@@ -1,6 +1,8 @@
 TODO kill all warnings -Wall
 TODO kill all lint notices
 
+\vspace{0.5cm}
+
 \begin{code}
  module HDTP where
  import Data.List ((\\), find, sortBy, minimumBy)
@@ -50,6 +52,8 @@ Now if we
 \end{definition}
 
 TODO Xavier explain how we manage arity and how we use it as a database
+
+\vspace{0.5cm}
 
 \begin{code}
  -- newtype Term Sg [[s], [f], [p], af, ap] [v] = v | f [Term] deriving (Eq,Ord,Show) TODO: Remove?
@@ -144,6 +148,9 @@ $
 
 To implement this algorithm in Haskell, we first implement a helper function which takes a list of variable symbols and gives us a new variable name that is not yet in that list. Exploiting Haskell's lazyness this function can create new variable names for a given list of any length. We first add $X, Y, Z, W$ to the list of possible variable symbols as those are our preferred variable names. 
 
+\vspace{0.5cm}
+
+
 \begin{code}
  newVariable :: [VarSymb] -> VarSymb
  newVariable xs = head (allVarSymb \\ xs) where 
@@ -151,6 +158,9 @@ To implement this algorithm in Haskell, we first implement a helper function whi
 \end{code}
 
 The function \texttt{lambdaForTerms} is an implementation of the lgg algorithm for terms as stated above and in \cite[3]{Tabareau2013AntiUnificationWT}. 
+
+\vspace{0.5cm}
+
 
 \begin{code}
 
@@ -166,6 +176,8 @@ The function \texttt{lambdaForTerms} is an implementation of the lgg algorithm f
 
 Here we use the helper function \texttt{sameTop} that takes two lists of terms $[t_1,\dots,t_n]$, $[u_1,\dots,u_n]$ and a list of generalisations $\theta_0$ and computes recursively the i-th generalisation taking the i-th terms from the lists and the (i-1)-th generalisation. The result is of the form $[(x_1, \theta_1), \dots (x_n, \theta_n)]$. 
 
+\vspace{0.5cm}
+
 \begin{code}
  sameTop :: [Term] -> [Term] -> [TermGen] -> [(Term, [TermGen])]
  sameTop [] [] _ = []
@@ -177,6 +189,8 @@ Here we use the helper function \texttt{sameTop} that takes two lists of terms $
 
 The original algorithm from \cite{Tabareau2013AntiUnificationWT} is designed for generalizing terms, not formulas.
 We have adapted it to pairs of general formulas, provided that they have the same predicate structure.
+
+\vspace{0.5cm}
 
 \begin{code}
 
@@ -204,6 +218,7 @@ To better capture these kinds of situations, HDTP replaces the simple form of fi
 
 Following what appears to be the authors' intent, we can generalize these basic substitutions to apply to formulae. Our implementation of these substitutions ...
 
+\vspace{0.5cm}
 
 \begin{code}
  data Sub = SR Renaming | SF Fixation | SI Insertion | SP Permutation deriving (Eq, Show)
@@ -255,6 +270,8 @@ Following what appears to be the authors' intent, we can generalize these basic 
 
 In Haskell, we implement fixations as follows.
 
+\vspace{0.5cm}
+
 \begin{code}
  newtype Fixation = F (VarSymb, FunSymb) deriving (Eq, Show)
 
@@ -300,6 +317,8 @@ In Haskell, we implement fixations as follows.
 
 We define permutations as follows in Haskell.
 
+\vspace{0.5cm}
+
 % TODO justify why we need the instances Show, Eq for function. (Max: do we still need it?)
 
 \begin{code}
@@ -311,6 +330,8 @@ We define permutations as follows in Haskell.
  %-- Here it must hold that f assigns only indices smaller than length of the list to such indices, no checking whether f is bijective is done
 
 The following recursive helper function permutes a list, given a function from indices of that list to indices of that list. Because of the recursive charcater of this helper function the list needs to be given twice as an argument.
+
+\vspace{0.5cm}
 
 \begin{code}
 
@@ -326,6 +347,8 @@ The following recursive helper function permutes a list, given a function from i
 \end{code}
 
 The following function allows then to apply a permutation to a formula. 
+
+\vspace{0.5cm}
 
 \begin{code}
 
@@ -449,6 +472,8 @@ notion of ``complexity of generalization'' discussed in
 
 The following functions compute the complexity of a single substitution, of a list of substitutions and of a generalisation.
 
+\vspace{0.5cm}
+
 \begin{code}
  type Comp = Int
 
@@ -468,6 +493,8 @@ The following functions compute the complexity of a single substitution, of a li
 \end{code}
 
 Finally, we have a function that computes the generalisation with least complexity given a list of generalisations.
+
+\vspace{0.5cm}
 
 \begin{code}
 
@@ -511,6 +538,7 @@ This is precisely the tactic we use to construct the basic framework for forming
 
 \end{code}
 
+\vspace{0.5cm}
 
 \begin{code}
  type Gen = (Form, [Sub], [Sub])
@@ -562,6 +590,7 @@ Second, apply any number of the chains of substitutions $\{\tau_1, \dots \tau_n\
 
 In our implementation of analogical transfer, we have chosen to freely generate all sentences about from the TODO
 
+\vspace{0.5cm}
 
 \begin{code}
 
