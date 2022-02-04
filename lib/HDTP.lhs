@@ -142,7 +142,7 @@ $
 $
 
 
-To implement this algorith in Haskell, we first implement a helper function which takes a list of variable symbols and gives us a new variable name that is not yet in that list. Exploiting Haskell's lazyness this function can create new variable names for a given list of any length. We first add $X, Y, Z, W$ to the list of possible variable symbols as those are our preferred variable names.
+To implement this algorithm in Haskell, we first implement a helper function which takes a list of variable symbols and gives us a new variable name that is not yet in that list. Exploiting Haskell's lazyness this function can create new variable names for a given list of any length. We first add $X, Y, Z, W$ to the list of possible variable symbols as those are our preferred variable names. 
 
 \begin{code}
  newVariable :: [VarSymb] -> VarSymb
@@ -164,7 +164,7 @@ To implement this algorith in Haskell, we first implement a helper function whic
 
 \end{code}
 
-Here we use the helper function\texttt{sameTop} that takes two lists of terms and a list of generalisations and feeds the i-th
+Here we use the helper function \texttt{sameTop} that takes two lists of terms and a list of generalisations and computes recursively the i-th generalisation taking the i-th terms from the lists and the (i-1)-th generalisation. The result is of the form $[(x_1, \theta_1), \dots (x_n, \theta_n)]$.
 
 \begin{code}
  sameTop :: [Term] -> [Term] -> [TermGen] -> [(Term, [TermGen])]
