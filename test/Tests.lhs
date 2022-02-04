@@ -1,5 +1,5 @@
 \ifx true false 
-% We put this to exclude the first part from the compilation of the pdf file 
+% We put this to exclude the first part from being displayed in the pdf file 
 
 \begin{code}
 
@@ -91,11 +91,7 @@ casesLambda = [
   , inputLambda       = (FT (PS "dist") [ T (FS "planet") [], T (FS "sun") [], T (VS "T") [] ], FT (PS "dist") [ T (FS "electron") [], T (FS "nucleus") [], T (VS "T") [] ], [])
   , expectedLambda    = (FT (PS "dist") [ T (VS "X") [], T (VS "Y") [], T (VS "T") [] ], [("Y",T (FS "sun") [],T (FS "nucleus") []),("X",T (FS "planet") [],T (FS "electron") [])])
   },
- -- CaseLambda {
- --   descriptionLambda = "DummyPr(height(in(water, beaker), t)), DummyPr(temp(in(coffee, cup), t)) -> DummyPr(X(Y, t))"
- -- , inputLambda       = (FT (PS "DummyPr") [T (FS "height") [T (FS "in") [T (FS "water") [], T (FS "beaker") []], T (VS "t") []]], FT (PS "DummyPr") [T (FS "temp") [T (FS "in") [T (FS "coffee") [], T (FS "cup") []], T (VS "t") []]], [])
- -- , expectedLambda    = (FT (PS "DummyPr") [T (VS "X") [T (VS "Y") [], T (VS "t") []]], []) -- TODO: according to the paper this should be the right solution. But we get sth different.
- -- },
+  
   CaseLambda { descriptionLambda = "f(g(a, b, c), d), f(d, h (a)) -> f(X, Y)"
   , inputLambda       = (FT (PS "f") [T (FS "g") [T (FS "a") [], T (FS "b") [], T (FS "c") []], T (FS "d") []] , FT (PS "f") [T (FS "d") [], T (FS "h") [T (FS "a") []]], [])
   , expectedLambda    = (FT (PS "f") [T (VS "X") [], T (VS "Y") []], [("Y",T (FS "d") [],T (FS "h") [T (FS "a") []]),("X",T (FS "g") [T (FS "a") [],T (FS "b") [],T (FS "c") []],T (FS "d") [])])
@@ -118,7 +114,7 @@ casesLambda = [
 \end{code}
 
 \ifx true false
-% The rest won't be compiled for the pdf
+% The rest won't be displayed in the pdf
 
 \begin{code}
   ]
@@ -140,11 +136,6 @@ casesLambdaT = [
     inputLambdaT       = (T (FS "dist") [ T (FS "planet") [], T (FS "sun") [], T (VS "T") [] ], T (FS "dist") [ T (FS "electron") [], T (FS "nucleus") [], T (VS "T") [] ], []),
     expectedLambdaT    = (T (FS "dist") [ T (VS "X") [], T (VS "Y") [], T (VS "T") [] ], [("Y",T (FS "sun") [],T (FS "nucleus") []),("X",T (FS "planet") [],T (FS "electron") [])])
   }
- -- CaseLambdaT {
- --   descriptionLambdaT = "height(in(water, beaker), t), temp(in(coffee, cup), t) -> X(Y, t)"
- -- , inputLambdaT       = (T (FS "height") [T (FS "in") [T (FS "water") [], T (FS "beaker") []], T (VS "t") []], T (FS "temp") [T (FS "in") [T (FS "coffee") [], T (FS "cup") []], T (VS "t") []], [])
- -- , expectedLambdaT    = (T (VS "X") [T (VS "Y") [], T (VS "t") []], []) -- TODO: according to the paper this should be the right solution. But we get sth different.
- -- }
   ]
 
 data CaseAlign = CaseAlign {
